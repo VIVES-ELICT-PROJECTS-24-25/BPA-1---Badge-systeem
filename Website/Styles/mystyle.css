@@ -196,3 +196,114 @@ body {
     margin-top: 1rem;
     font-size: 0.9rem;
 }
+
+/* Main container styling */
+.photo-info {
+    max-width: 1200px;
+    margin: 3rem auto;
+    padding: 0 2rem;
+}
+
+/* Individual printer item styling */
+.photo-item {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    margin-bottom: 4rem;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.photo-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Image styling */
+.photo-item img {
+    width: 400px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.photo-item img:hover {
+    transform: scale(1.05);
+}
+
+/* Text content styling */
+.photo-text {
+    flex: 1;
+    padding: 1rem;
+}
+
+.photo-text h2 {
+    font-size: 2rem;
+    color: var(--vivesDark);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.photo-text p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--vivesGray);
+}
+
+/* Reverse layout for alternating items */
+.photo-item.reverse {
+    flex-direction: row-reverse;
+}
+
+/* Add a subtle border */
+.photo-item {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive design */
+@media (max-width: 900px) {
+    .photo-item,
+    .photo-item.reverse {
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .photo-item img {
+        width: 100%;
+        height: 250px;
+    }
+
+    .photo-text {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Add smooth scrolling to the page */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Optional: Add a subtle animation when elements come into view */
+.photo-item {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Ensure each item animates sequentially */
+.photo-item:nth-child(1) { animation-delay: 0.2s; }
+.photo-item:nth-child(2) { animation-delay: 0.4s; }
+.photo-item:nth-child(3) { animation-delay: 0.6s; }
