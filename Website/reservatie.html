@@ -1,13 +1,26 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservatie</title>
+
+    <!-- Materialize CSS en JS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <title>Reservatie</title>
+
+    <!-- Externe CSS en JS voor kalender -->
+    <link href="Styles/kalender.css" rel="stylesheet">
+    <script src="Scripts/kalender.js"></script>
+
+    <!-- Externe CSS voor de layout -->
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body>   
+<body>
+
   <nav>
     <div class="nav-wrapper">
       <a href="#" class="brand-logo">Logo</a>
@@ -19,5 +32,83 @@
       </ul>
     </div>
   </nav>
+
+  <div class="container">
+    <!-- Reservation Form -->
+    <div class="form-container">
+        <label for="printer">Printer:</label>
+        <select id="printer">
+            <option value="printerA">Printer A</option>
+            <option value="printerB">Printer B</option>
+            <option value="printerC">Printer C</option>
+        </select>
+
+        <label for="eventName">Job Name:</label>
+        <input type="text" id="eventName" placeholder="Enter job name">
+
+        <label for="start">Start Time:</label>
+        <select id="start">
+            <option value="6">6AM</option>
+            <option value="7">7AM</option>
+            <option value="8">8AM</option>
+            <option value="9">9AM</option>
+            <option value="10">10AM</option>
+            <option value="11">11AM</option>
+            <option value="12">12PM</option>
+            <option value="13">1PM</option>
+            <option value="14">2PM</option>
+            <option value="15">3PM</option>
+        </select>
+
+        <label for="end">End Time:</label>
+        <select id="end">
+            <option value="7">7AM</option>
+            <option value="8">8AM</option>
+            <option value="9">9AM</option>
+            <option value="10">10AM</option>
+            <option value="11">11AM</option>
+            <option value="12">12PM</option>
+            <option value="13">1PM</option>
+            <option value="14">2PM</option>
+            <option value="15">3PM</option>
+            <option value="16">4PM</option>
+        </select>
+
+        <button class="btn" onclick="addReservation()">Add Reservation</button>
+    </div>
+
+    <div class="timeline-container">
+        <!-- Room List -->
+        <div class="rooms">
+            <div>Printer A</div>
+            <div>Printer B</div>
+            <div>Printer C</div>
+        </div>
+
+        <!-- Timeline Grid -->
+        <div class="timeline">
+            <!-- Time Row -->
+            <div class="timeline-row">
+                <div class="time-slot">6AM</div>
+                <div class="time-slot">7AM</div>
+                <div class="time-slot">8AM</div>
+                <div class="time-slot">9AM</div>
+                <div class="time-slot">10AM</div>
+                <div class="time-slot">11AM</div>
+                <div class="time-slot">12PM</div>
+                <div class="time-slot">1PM</div>
+                <div class="time-slot">2PM</div>
+                <div class="time-slot">3PM</div>
+            </div>
+            <!-- Printer Rows -->
+            <div class="timeline-row" id="printerA"></div>
+            <div class="timeline-row" id="printerB"></div>
+            <div class="timeline-row" id="printerC"></div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Externe JS-bestanden -->
+  <script src="Scripts/kalender.js"></script>
 </body>
 </html>

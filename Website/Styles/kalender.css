@@ -1,0 +1,63 @@
+body { font-family: Arial, sans-serif; }
+.container { width: 90%; margin: 20px auto; }
+.timeline-container {
+    display: grid;
+    grid-template-columns: 150px auto;
+    border: 1px solid #ccc;
+    width: 100%;
+    overflow-x: auto;
+}
+.rooms {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #ccc;
+    background: #f8f8f8;
+}
+.rooms div { padding: 10px; border-bottom: 1px solid #ccc; }
+.timeline {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.timeline-row {
+    display: flex;
+    border-bottom: 1px solid #ccc;
+    position: relative;
+    height: 40px;
+}
+.time-slot {
+    flex: 1;
+    border-right: 1px solid #eee;
+    position: relative;
+}
+.event {
+    position: absolute;
+    top: 5px;
+    height: 30px;
+    color: white;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center;
+}
+.blue { background-color: #007bff; }
+.green { background-color: #28a745; }
+.orange { background-color: #fd7e14; }
+.red { background-color: #dc3545; }
+.form-container {
+    margin-bottom: 20px;
+    padding: 10px;
+    background: #f4f4f4;
+    border-radius: 5px;
+}
+.form-container label, .form-container select, .form-container input {
+    margin-right: 10px;
+}
+.btn {
+    padding: 5px 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+.btn:hover { background: #0056b3; }
