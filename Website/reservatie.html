@@ -86,56 +86,37 @@
 </script>
 
   <div class="container">
-    <!-- Reservation Form -->
-    <div class="form-container">
-        <label for="printer">Printer:</label>
-        <select id="printer">
-            <option value="printerA">Printer A</option>
-            <option value="printerB">Printer B</option>
-            <option value="printerC">Printer C</option>
-        </select>
+    <!-- Update the form-container section in reservatie.html -->
+<div class="form-container">
+    <label for="printer">Printer:</label>
+    <select id="printer">
+        <option value="printerA">Ender3 V3 (3DP01)</option>
+        <option value="printerB">Ender3 V2 (3DP02)</option>
+        <option value="printerC">Ender3 PRO (3DP03)</option>
+    </select>
 
-        <label for="eventName">Job Name:</label>
-        <input type="text" id="eventName" placeholder="Enter job name">
+    <label for="date">Datum:</label>
+    <input type="date" id="date" onchange="onDateChange()">
 
-        <label for="start">Start Time:</label>
-        <select id="start">
-            <option value="6">6AM</option>
-            <option value="7">7AM</option>
-            <option value="8">8AM</option>
-            <option value="9">9AM</option>
-            <option value="10">10AM</option>
-            <option value="11">11AM</option>
-            <option value="12">12PM</option>
-            <option value="13">1PM</option>
-            <option value="14">2PM</option>
-            <option value="15">3PM</option>
-        </select>
+    <label for="eventName">Naam:</label>
+    <input type="text" id="eventName" placeholder="Voer hier je naam in">
 
-        <label for="end">End Time:</label>
-        <select id="end">
-            <option value="7">7AM</option>
-            <option value="8">8AM</option>
-            <option value="9">9AM</option>
-            <option value="10">10AM</option>
-            <option value="11">11AM</option>
-            <option value="12">12PM</option>
-            <option value="13">1PM</option>
-            <option value="14">2PM</option>
-            <option value="15">3PM</option>
-            <option value="16">4PM</option>
-        </select>
+    <label for="start">Start tijd:</label>
+    <select id="start"></select>
 
-        <button class="btn" onclick="addReservation()">Add Reservation</button>
-    </div>
+    <label for="end">Eind tijd:</label>
+    <select id="end"></select>
+
+    <button class="btn" onclick="addReservation()">Reservatie toevoegen</button>
+</div>
 
     <div class="timeline-container">
         <!-- Room List -->
         <div class="rooms">
             <div> </div>
-            <div>Printer A</div>
-            <div>Printer B</div>
-            <div>Printer C</div>
+            <div>Ender3 V3 (3DP01)</div>
+            <div>Ender3 V2 (3DP02)</div>
+            <div>Ender3 PRO (3DP03)</div>
         </div>
 
         <!-- Timeline Grid -->
