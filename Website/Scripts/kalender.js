@@ -37,15 +37,23 @@ function addReservation() {
 }
 
 function renderEvent(printerId, title, startHour, endHour, color) {
+    // Haal de juiste printerrij op met de bijbehorende id
     const printerRow = document.getElementById(printerId);
-    const totalSlots = 10;
-    const slotWidth = 100 / totalSlots;
+    
+    if (!printerRow) {
+        console.error("Printer row not found:", printerId);
+        return; // Stop de functie als de printerrij niet bestaat
+    }
+
+    const totalSlots = 10; // Aantal tijdslots
+    const slotWidth = 100 / totalSlots; // Breedte per tijdslot in procenten
 
     let eventDiv = document.createElement("div");
     eventDiv.className = "event " + color;
-    eventDiv.style.left = (slotWidth * (startHour - 6)) + "%";
-    eventDiv.style.width = (slotWidth * (endHour - startHour)) + "%";
+    eventDiv.style.left = (slotWidth * (startHour - 6)) + "%"; // Stel de linker positie in
+    eventDiv.style.width = (slotWidth * (endHour - startHour)) + "%"; // Stel de breedte in
     eventDiv.textContent = title;
 
+    // Voeg de eventdiv toe aan de juiste printerrij
     printerRow.appendChild(eventDiv);
 }
