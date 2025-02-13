@@ -1,24 +1,74 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="Styles/mystyle.css">
     <title>Mijn reservaties</title>
 </head>
 <body>   
-  <nav>
-    <div class="nav-wrapper">
-      <a href="#" class="brand-logo">Logo</a>
-      <ul id="nav-mobile" class="right hide-on-med-and-down">
-        <li><a href="reservatie.html">Reserveer een printer</a></li>
-        <li><a href="mijnKalender.html">Mijn reservaties</a></li>
-         <li><a href="printers.html">Info over printers</a></li>
-        <li><a href="uitlog.html">Log uit</a></li>
-        
-      </ul>
-    </div>
-  </nav>
+    <nav>
+        <div class="nav-wrapper container">
+            <a href="index.html" class="brand-logo">
+                <img src="images/vives smile.svg" alt="Vives Logo" class="logo-img" />
+            </a>
+            <a href="#" data-target="mobile-nav" class="sidenav-trigger">
+                <i class="material-icons">menu</i>
+            </a>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li>
+                    <a href="reservatie.html">
+                        <i class="material-icons left">add_circle_outline</i>
+                        Reserveer een printer
+                    </a>
+                </li>
+                <li>
+                    <a href="mijnKalender.html">
+                        <i class="material-icons left">calendar_today</i>
+                        Mijn reservaties
+                    </a>
+                </li>
+                <li>
+                    <a href="printers.html">
+                        <i class="material-icons left">print</i>
+                        Info over printers
+                    </a>
+                </li>
+                <li>
+                    <a href="uitlog.html">
+                        <i class="material-icons left">logout</i>
+                        Log uit
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <iframe src='https://outlook.office365.com/book/Test2277938@vives.cloud/' width='100%' height='100%' scrolling='yes' style='border:0'></iframe>
+
+    <!-- Mobile Navigation -->
+    <ul class="sidenav" id="mobile-nav">
+        <li>
+            <div class="user-view">
+                <img src="images/vives smile.svg" alt="Vives Logo" class="sidenav-logo" />
+            </div>
+        </li>
+        <li><a href="reservatie.html"><i class="material-icons">add_circle_outline</i>Reserveer een printer</a></li>
+        <li><a href="mijnKalender.html"><i class="material-icons">calendar_today</i>Mijn reservaties</a></li>
+        <li><a href="printers.html"><i class="material-icons">print</i>Info over printers</a></li>
+        <li class="divider"></li>
+        <li><a href="uitlog.html"><i class="material-icons">logout</i>Log uit</a></li>
+    </ul>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var elems = document.querySelectorAll('.sidenav');
+            var instances = M.Sidenav.init(elems);
+        });
+    </script>
 </body>
 </html>
