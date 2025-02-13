@@ -1,49 +1,48 @@
 let events = [];
 
-// Function to generate time options
+// Update the form in the HTML first
+function updateFormStructure() {
+    const formContainer = document.querySelector('.form-container');
+}
+
+function formatTime(decimalHours) {
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.round((decimalHours - hours) * 60);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours > 12 ? hours - 12 : hours;
+    return `${displayHour}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+}
+
+// Generate time options for start time only
 function generateTimeOptions() {
     const startHour = 6; // 6 AM
     const endHour = 18; // 6 PM
-    const startSelect = document.getElementById("start");
-    const endSelect = document.getElementById("end");
+    const startSelect = document.getElementById("startTime");
     
-    // Clear existing options
     startSelect.innerHTML = '';
-    endSelect.innerHTML = '';
     
-    // Generate options for each half hour
-    for (let hour = startHour; hour <= endHour; hour++) {
-        for (let minute = 0; minute < 60; minute += 30) {
+    for (let hour = startHour; hour < endHour; hour++) {
+        for (let minute = 0; minute < 60; minute += 15) {
             const value = hour + minute/60; // Store as decimal for calculations
             const displayHour = hour > 12 ? hour - 12 : hour;
             const ampm = hour >= 12 ? 'PM' : 'AM';
             const displayMinute = minute === 0 ? '00' : minute;
             const displayText = `${displayHour}:${displayMinute} ${ampm}`;
             
-            // Add to start time dropdown (excluding the last time slot)
-            if (value < endHour) {
-                const startOption = new Option(displayText, value);
-                startSelect.add(startOption);
-            }
-            
-            // Add to end time dropdown (excluding the first time slot)
-            if (value > startHour) {
-                const endOption = new Option(displayText, value);
-                endSelect.add(endOption);
-            }
+            const option = new Option(displayText, value);
+            startSelect.add(option);
         }
     }
 }
 
+// Modified addReservation function
 function addReservation() {
-    let printerId = document.getElementById("printer").value;
-    let eventName = document.getElementById("eventName").value;
-    let selectedDate = document.getElementById("date").value;
-    let startHour = parseFloat(document.getElementById("start").value);
-    let endHour = parseFloat(document.getElementById("end").value);
-    let colors = ["blue", "green", "orange", "red"];
-    let color = colors[Math.floor(Math.random() * colors.length)];
-
+    const printerId = document.getElementById("printer").value;
+    const eventName = document.getElementById("eventName").value;
+    const selectedDate = document.getElementById("date").value;
+    const startTime = parseFloat(document.getElementById("startTime").value);
+    const printDuration = parseFloat(document.getElementById("printDuration").value);
+    
     if (!eventName.trim()) {
         alert("Please enter a job name.");
         return;
@@ -54,8 +53,15 @@ function addReservation() {
         return;
     }
 
-    if (endHour <= startHour) {
-        alert("End time must be after start time.");
+    // Calculate total time including setup and cooldown
+    const setupDuration = 0.25; // 15 minutes
+    const cooldownDuration = printDuration * 0.1;
+    const actualStartTime = startTime - setupDuration;
+    const endTime = startTime + printDuration + cooldownDuration;
+
+    // Check if total time exceeds operating hours
+    if (actualStartTime < 6 || endTime > 18) {
+        alert("Total reservation time must be within operating hours (6AM - 6PM).");
         return;
     }
 
@@ -72,21 +78,24 @@ function addReservation() {
     for (let event of events) {
         if (event.printer === printerId &&
             event.date === selectedDate &&
-            ((startHour >= event.start && startHour < event.end) ||
-            (endHour > event.start && endHour <= event.end) ||
-            (startHour <= event.start && endHour >= event.end))) {
+            ((actualStartTime >= event.start && actualStartTime < event.end) ||
+            (endTime > event.start && endTime <= event.end) ||
+            (actualStartTime <= event.start && endTime >= event.end))) {
             alert("Time slot is already booked.");
             return;
         }
     }
 
     // Add to event list
+    let colors = ["blue", "green", "orange", "red"];
+    let color = colors[Math.floor(Math.random() * colors.length)];
+    
     events.push({ 
         printer: printerId, 
         title: eventName, 
         date: selectedDate,
-        start: startHour, 
-        end: endHour, 
+        start: actualStartTime,
+        end: endTime,
         color 
     });
 
@@ -124,10 +133,16 @@ function renderEvent(printerId, title, startHour, endHour, color) {
     let eventDiv = document.createElement("div");
     eventDiv.className = "event " + color;
     
+    // Create tooltip
+    const tooltipDiv = document.createElement("div");
+    tooltipDiv.className = "tooltip";
+    tooltipDiv.textContent = `${formatTime(startHour)} - ${formatTime(endHour)}`;
+    eventDiv.appendChild(tooltipDiv);
+    
     // Get the timeline row width
     const timelineWidth = printerRow.offsetWidth;
     // Calculate the width of one hour slot (total width / number of slots)
-    const hourWidth = timelineWidth / 10; // 10 time slots
+    const hourWidth = timelineWidth / 13; // 13 time slots (6AM to 6PM)
 
     // Calculate start position and width
     const startPosition = (startHour - 6) * hourWidth; // 6 is the start hour
@@ -137,6 +152,7 @@ function renderEvent(printerId, title, startHour, endHour, color) {
     eventDiv.style.left = startPosition + 'px';
     eventDiv.style.width = width + 'px';
     eventDiv.textContent = title;
+    eventDiv.appendChild(tooltipDiv); // Add tooltip after setting text content
 
     // Add the event div to the printer row
     printerRow.appendChild(eventDiv);
@@ -151,12 +167,23 @@ window.addEventListener('resize', () => {
     }
 });
 
-// Function to handle date changes
-function onDateChange() {
-    const selectedDate = document.getElementById("date").value;
-    clearEvents();
-    renderEvents(selectedDate);
+// Update the time slots in the HTML
+function updateTimeSlots() {
+    const timelineRow = document.querySelector('.timeline-row:first-child');
+    timelineRow.innerHTML = ''; // Clear existing slots
+    
+    // Add all time slots from 6AM to 6PM
+    for (let hour = 6; hour <= 18; hour++) {
+        const timeSlot = document.createElement('div');
+        timeSlot.className = 'time-slot';
+        timeSlot.textContent = hour <= 12 ? `${hour}AM` : `${hour-12}PM`;
+        timelineRow.appendChild(timeSlot);
+    }
 }
 
-// Call this when the page loads
-document.addEventListener('DOMContentLoaded', generateTimeOptions);
+// Initialize everything when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    updateFormStructure();
+    generateTimeOptions();
+    updateTimeSlots();
+});
