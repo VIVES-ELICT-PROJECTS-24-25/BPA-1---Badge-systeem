@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RFID Scanner Formulier</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.6/firebase-app-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.6.6/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>RFID Scanner</h1>
+        
+        <div class="scan-section">
+            <button class="scan-button" onclick="scanRFID()">Scan RFID/NFC</button>
+            <div id="status">Status: Gereed</div>
+        </div>
+
+        <form id="userForm" class="user-form">
+            <div class="form-group">
+                <label for="rfidValue">RFID/NFC Waarde:</label>
+                <input type="text" id="rfidValue" name="rfidValue" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="voornaam">Voornaam:</label>
+                <input type="text" id="voornaam" name="voornaam" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="naam">Naam:</label>
+                <input type="text" id="naam" name="naam" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="rnummer">R-nummer:</label>
+                <input type="text" id="rnummer" name="rnummer" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">E-mailadres:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <button type="submit" class="submit-button">Opslaan</button>
+        </form>
+    </div>
+    
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
