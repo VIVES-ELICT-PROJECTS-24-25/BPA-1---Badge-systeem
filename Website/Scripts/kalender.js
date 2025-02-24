@@ -5,11 +5,12 @@ function updateFormStructure() {
     const formContainer = document.querySelector('.form-container');
 }
 
+// Make sure this function is working correctly
 function formatTime(decimalHours) {
     const hours = Math.floor(decimalHours);
     const minutes = Math.round((decimalHours - hours) * 60);
     const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHour = hours > 12 ? hours - 12 : hours;
+    const displayHour = hours === 0 ? 12 : (hours > 12 ? hours - 12 : hours);
     return `${displayHour}:${minutes.toString().padStart(2, '0')} ${ampm}`;
 }
 
@@ -56,11 +57,23 @@ function addReservation() {
     // Calculate total time including setup and cooldown
     const setupDuration = 0.25; // 15 minutes
     const cooldownDuration = printDuration * 0.1;
-    const actualStartTime = startTime - setupDuration;
-    const endTime = startTime + printDuration + cooldownDuration;
+    
+    // Special handling for 6:00 AM start time
+    let actualStartTime, endTime;
+    
+    if (startTime === 6) {
+        // For 6:00 AM, we start exactly at 6:00 (no setup time before)
+        actualStartTime = 6;
+        // Add setup time to the total duration instead
+        endTime = startTime + setupDuration + printDuration + cooldownDuration;
+    } else {
+        // For other times, apply the setup time before the start time
+        actualStartTime = startTime - setupDuration;
+        endTime = startTime + printDuration + cooldownDuration;
+    }
 
     // Check if total time exceeds operating hours
-    if (actualStartTime < 6 || endTime > 18) {
+    if (endTime > 18) {
         alert("Total reservation time must be within operating hours (6AM - 6PM).");
         return;
     }
@@ -122,6 +135,7 @@ function renderEvents(date) {
     });
 }
 
+// Modify just the renderEvent function in your kalender.js file
 function renderEvent(printerId, title, startHour, endHour, color) {
     const printerRow = document.querySelector('.timeline-container .timeline #' + printerId);
     
@@ -130,34 +144,32 @@ function renderEvent(printerId, title, startHour, endHour, color) {
         return;
     }
 
+    // Create main event container
     let eventDiv = document.createElement("div");
     eventDiv.className = "event " + color;
     
-    // Create tooltip
-    const tooltipDiv = document.createElement("div");
-    tooltipDiv.className = "tooltip";
-    tooltipDiv.textContent = `${formatTime(startHour)} - ${formatTime(endHour)}`;
-    eventDiv.appendChild(tooltipDiv);
-    
     // Get the timeline row width
     const timelineWidth = printerRow.offsetWidth;
-    // Calculate the width of one hour slot (total width / number of slots)
     const hourWidth = timelineWidth / 13; // 13 time slots (6AM to 6PM)
 
     // Calculate start position and width
     const startPosition = (startHour - 6) * hourWidth; // 6 is the start hour
     const width = (endHour - startHour) * hourWidth;
 
-    // Set the positioning styles using pixels for exact matching
+    // Set the positioning styles
     eventDiv.style.left = startPosition + 'px';
     eventDiv.style.width = width + 'px';
+    
+    // Set primary content (title only)
     eventDiv.textContent = title;
-    eventDiv.appendChild(tooltipDiv); // Add tooltip after setting text content
-
+    
+    // Add data attributes for the tooltip content
+    eventDiv.dataset.startTime = formatTime(startHour);
+    eventDiv.dataset.endTime = formatTime(endHour);
+    
     // Add the event div to the printer row
     printerRow.appendChild(eventDiv);
 }
-
 // Add window resize handler to update event positions
 window.addEventListener('resize', () => {
     clearEvents();
