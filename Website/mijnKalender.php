@@ -1,3 +1,18 @@
+<?php
+session_start();
+
+// Controleer of de gebruiker is ingelogd
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    // Gebruiker is niet ingelogd, redirect naar de inlogpagina
+    header('Location: index.php'); // Vervang door de juiste inlogpagina
+    exit;
+}
+
+// Als de gebruiker is ingelogd, kan de rest van de pagina worden weergegeven
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
