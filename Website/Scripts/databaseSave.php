@@ -7,19 +7,36 @@ $db_user = "root";
 $db_pass = "";
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405); // Method Not Allowed
     echo json_encode(['success' => false, 'message' => 'Alleen POST requests zijn toegestaan']);
     exit;
 }
 
-$voornaam = $_POST['voornaam'] ?? null;
-$naam = $_POST['naam'] ?? null;
-$email = $_POST['email'] ?? null;
-$rnummer = $_POST['rnummer'] ?? null;
-$studierichting = $_POST['studierichting'] ?? null;
+// Ontvang en valideer de invoer
+$voornaam = filter_input(INPUT_POST, 'voornaam', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$naam = filter_input(INPUT_POST, 'naam', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+$rnummer = filter_input(INPUT_POST, 'rnummer', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$studierichting = filter_input(INPUT_POST, 'studierichting', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 $password = $_POST['password'] ?? null;
 
 if (!$voornaam || !$naam || !$email || !$rnummer || !$studierichting || !$password) {
-    echo json_encode(['success' => false, 'message' => 'Alle velden zijn verplicht']);
+    http_response_code(400); // Bad Request
+    echo json_encode(['success' => false, 'message' => 'Alle velden zijn verplicht en moeten correct zijn']);
+    exit;
+}
+
+// Valideer het e-mailadres
+if (!preg_match('/@(?:student\.vives\.be|vives\.be)$/', $email)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'E-mailadres moet eindigen op student.vives.be of vives.be']);
+    exit;
+}
+
+// Wachtwoord validatie
+if (strlen($password) < 8) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Wachtwoord moet minimaal 8 tekens lang zijn']);
     exit;
 }
 
@@ -56,5 +73,6 @@ try {
 
     echo json_encode(['success' => true, 'message' => 'Registratie voltooid']);
 } catch (PDOException $e) {
+    http_response_code(500); // Internal Server Error
     echo json_encode(['success' => false, 'message' => 'Database fout: ' . $e->getMessage()]);
 }

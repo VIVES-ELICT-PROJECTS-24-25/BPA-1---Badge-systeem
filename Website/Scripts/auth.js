@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (result.success) {
                 localStorage.setItem('isLoggedIn', 'true');
-                window.location.href = localStorage.getItem('intendedUrl') || 'mijnKalender.html';
+                window.location.href = localStorage.getItem('intendedUrl') || 'mijnKalender.php';
             } else {
                 alert('Ongeldige inloggegevens');
             }

@@ -29,7 +29,7 @@
             <button type="submit">Inloggen</button>
         </form>
         <p class="login-link">
-            Nog geen account? <a href="registreer.html">Registreer hier</a>
+            Nog geen account? <a href="registreer.php">Registreer hier</a>
         </p>
     </div>
 </body>

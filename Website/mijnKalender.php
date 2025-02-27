@@ -15,7 +15,7 @@
 <body>   
   <nav class="navbar">
     <div class="nav-container">
-        <a href="index.html" class="nav-logo">
+        <a href="index.php" class="nav-logo">
             <img src="images/vives smile.svg" alt="Vives Logo" />
         </a>
         
@@ -25,7 +25,7 @@
 
         <ul class="nav-menu">
             <li class="nav-item">
-                <a href="reservatie.html" class="nav-link">
+                <a href="reservatie.php" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="12" y1="8" x2="12" y2="16"/>
@@ -35,7 +35,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="mijnKalender.html" class="nav-link">
+                <a href="mijnKalender.php" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                         <line x1="16" y1="2" x2="16" y2="6"/>
@@ -46,7 +46,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="printers.html" class="nav-link">
+                <a href="printers.php" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M6 9V2h12v7"/>
                         <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
@@ -56,7 +56,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="uitlog.html" class="nav-link">
+                <a href="uitlog.php" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
                         <polyline points="16 17 21 12 16 7"/>
