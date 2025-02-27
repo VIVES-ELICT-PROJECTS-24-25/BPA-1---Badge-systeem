@@ -19,16 +19,16 @@ function login(username, password) {
 
 function logout() {
     localStorage.removeItem('isLoggedIn');
-    window.location.href = 'index.html';
+    window.location.href = 'index.php';
 }
 
 function protectRoute() {
-    const protectedPages = ['mijnKalender.html', 'reservatie.html'];
+    const protectedPages = ['mijnKalender.php', 'reservatie.php'];
     const currentPage = window.location.pathname.split('/').pop();
     
     if (protectedPages.includes(currentPage) && !checkAuth()) {
         localStorage.setItem('intendedUrl', currentPage);
-        window.location.href = 'index.html';
+        window.location.href = 'index.php';
     }
 }
 

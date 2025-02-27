@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservatie</title>
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Externe CSS en JS voor kalender -->
+    <link href="Styles/kalender.css" rel="stylesheet">
+    <script src="Scripts/kalender.js"></script>
+    <script src="Scripts/auth.js"></script>
+    <script src="Scripts/navigation.js"></script>
+
+    <!-- Externe CSS voor de layout -->
+    <link rel="stylesheet" href="Styles/mystyle.css">
+
+</head>
+<body>
+
+    <nav class="navbar">
+    <div class="nav-container">
+        <a href="index.php" class="nav-logo">
+            <img src="images/vives smile.svg" alt="Vives Logo" />
+        </a>
+        
+        <button class="nav-toggle" aria-label="Open menu">
+            <span class="hamburger"></span>
+        </button>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="reservatie.php" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="16"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                    Reserveer een printer
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="mijnKalender.php" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    Mijn reservaties
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="printers.php" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9V2h12v7"/>
+                        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                        <rect x="6" y="14" width="12" height="8"/>
+                    </svg>
+                    Info over printers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="uitlog.php" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Log uit
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<script>
+    document.querySelector('.nav-toggle').addEventListener('click', function() {
+        document.querySelector('.nav-menu').classList.toggle('active');
+        this.classList.toggle('active');
+    });
+</script>
+
+  <div class="container">
+    <!-- Updated form-container section with two-step form structure -->
+    <div class="form-container">
+        <!-- Stap 1: Basisgegevens -->
+        <div id="step1Container" class="form-step">
+            <div class="input-field">
+                <label for="printer">Printer:</label>
+                <select id="printer">
+                    <option value="printerA">Ender3 V3 (3DP01)</option>
+                    <option value="printerB">Ender3 V2 (3DP02)</option>
+                    <option value="printerC">Ender3 PRO (3DP03)</option>
+                </select>
+            </div>
+
+            <div class="input-field">
+                <label for="date">Datum:</label>
+                <input type="date" id="date" onchange="onDateChange()">
+            </div>
+
+            <div class="input-field">
+                <label for="eventName">Naam:</label>
+                <input type="text" id="eventName" placeholder="Voer hier je naam in">
+            </div>
+
+            <div class="input-field">
+                <label for="startTime">Start tijd:</label>
+                <select id="startTime"></select>
+            </div>
+
+            <div class="input-field">
+                <label for="printDuration">Print tijd (uren):</label>
+                <input type="number" id="printDuration" min="0.5" max="12" step="0.5" value="1">
+            </div>
+
+            <div class="input-field">
+                <button type="button" id="nextToStep2" class="btn">Volgende</button>
+            </div>
+        </div>
+
+        <!-- Stap 2: Extra gegevens -->
+        <div id="step2Container" class="form-step" style="display: none;">
+            <div class="input-field">
+                <label for="opoInput">OPO</label>
+                <input type="text" id="opoInput" name="opoInput" placeholder="Voer OPO in">
+            </div>
+            
+            <div class="input-field">
+                <label for="filamentType">Type filament</label>
+                <select id="filamentType">
+                    <option value="PLA">PLA</option>
+                    <option value="ABS">ABS</option>
+                    <option value="PETG">PETG</option>
+                    <option value="Andere">Andere...</option>
+                </select>
+                
+                <input type="text" id="customFilament" placeholder="Voer het filamenttype in..." />
+                
+            </div>
+            
+            <div class="input-field">
+                <label for="filamentColor">Kleur filament</label>
+                <input type="text" id="filamentColor" name="filamentColor" placeholder="Voer filament kleur in">
+            </div>
+            
+            <div class="input-field">
+                <label for="filamentWeight">Hoeveelheid filament (gram)</label>
+                <input type="number" id="filamentWeight" name="filamentWeight" min="1" step="1" placeholder="Gram">
+            </div>
+            
+            <div class="input-field">
+                <button type="button" id="submitReservation" class="btn">Reservatie toevoegen</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="timeline-container">
+        <!-- Room List -->
+        <div class="rooms">
+            <div> </div>
+            <div>Ender3 V3 (3DP01)</div>
+            <div>Ender3 V2 (3DP02)</div>
+            <div>Ender3 PRO (3DP03)</div>
+        </div>
+
+        <!-- Timeline Grid -->
+        <div class="timeline">
+            <!-- Time Row -->
+            <div class="timeline-row"></div>
+
+            <!-- Printer Rows -->
+            <div class="timeline-row" id="printerA"></div>
+            <div class="timeline-row" id="printerB"></div>
+            <div class="timeline-row" id="printerC"></div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Externe JS-bestanden -->
+  <script src="Scripts/kalender.js"></script>
+  
+  <script>
+    // Ensure event listeners are attached for the two-step form buttons
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById("nextToStep2").addEventListener("click", goToStep2);
+        document.getElementById("submitReservation").addEventListener("click", addReservation);
+        
+        // Initialize other required functions
+        generateTimeOptions();
+        updateTimeSlots();
+        
+        // Initialize Materialize components if available
+        if (typeof M !== 'undefined') {
+            M.FormSelect.init(document.querySelectorAll('select'));
+        }
+    });
+  </script>
+</body>
+</html>
