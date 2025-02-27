@@ -14,7 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
             
     <script src="Scripts/auth.js"></script>
-    <script src="Scripts/inlog.js"></script>
+
 </head>
 <body>
     <div class="login-container">

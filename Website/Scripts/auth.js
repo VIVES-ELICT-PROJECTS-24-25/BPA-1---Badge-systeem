@@ -1,31 +1,26 @@
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('loginForm').addEventListener('submit', async function (event) {
-        event.preventDefault();
+document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        
-        const formData = new FormData();
-        formData.append('username', username);
-        formData.append('password', password);
+        const formData = new FormData(loginForm); // Zorg ervoor dat 'formData' correct is gedefinieerd
 
         try {
-            const response = await fetch('checkLogin.php', {
+            const response = await fetch('Scripts/databaseLees.php', {
                 method: 'POST',
                 body: formData
             });
 
-            const result = await response.json();
+            const data = await response.json();
 
-            if (result.success) {
-                localStorage.setItem('isLoggedIn', 'true');
-                window.location.href = localStorage.getItem('intendedUrl') || 'mijnKalender.php';
+            if (data.success) {
+                window.location.href = 'mijnKalender.php';
             } else {
-                alert('Ongeldige inloggegevens');
+                alert('Ongeldige gebruikersnaam of wachtwoord');
             }
         } catch (error) {
             console.error('Fout bij inloggen:', error);
-            alert('Er is een fout opgetreden. Probeer opnieuw.');
         }
     });
 });
