@@ -37,13 +37,13 @@
 
 .form-container select:focus,
 .form-container input:focus {
-    border-color: rgb(255, 0, 0);
+    border-color: #3b82f6;
     outline: none;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .btn {
-    background:rgba(255, 0, 0, 1);
+    background:red;
     color: white;
     padding: 10px 20px;
     border-radius: 6px;
@@ -55,7 +55,7 @@
 }
 
 .btn:hover {
-    background: rgba(255, 0, 0, 1.5);
+    background: #2563eb;
 }
 
 /* Rooms Column */
