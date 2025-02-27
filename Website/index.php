@@ -14,17 +14,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
             
     <script src="Scripts/auth.js"></script>
-
 </head>
 <body>
     <div class="login-container">
         <h2>Login</h2>
         <form id="loginForm">
             <label for="username">Gebruikersnaam:</label>
-            <input type="text" id="username" required>
+            <input type="text" id="username" name="username" required>
             
             <label for="password">Wachtwoord:</label>
-            <input type="password" id="password" required>
+            <input type="password" id="password" name="password" required>
             
             <button type="submit">Inloggen</button>
         </form>
