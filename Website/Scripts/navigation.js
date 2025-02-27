@@ -5,9 +5,9 @@ function updateNavigation() {
     
     if (!navMenu) return;
 
-    const reservatieLink = navMenu.querySelector('a[href="reservatie.php"]')?.parentElement;
-    const kalenderLink = navMenu.querySelector('a[href="mijnKalender.php"]')?.parentElement;
-    const logoutLink = navMenu.querySelector('a[href="uitlog.php"]')?.parentElement;
+    const reservatieLink = navMenu.querySelector('a[href="reservatie.html"]')?.parentElement;
+    const kalenderLink = navMenu.querySelector('a[href="mijnKalender.html"]')?.parentElement;
+    const logoutLink = navMenu.querySelector('a[href="uitlog.html"]')?.parentElement;
     
     if (isLoggedIn) {
         reservatieLink?.classList.remove('disabled');

@@ -163,7 +163,7 @@ function addReservation() {
     
     // Validatie voor stap 2 velden
     if (!opo.trim()) {
-        alert("Voer OPO in. indien geen OPO, vul 'geen' in.");
+        alert("Voer OPO/projectnaam in. indien geen OPO/project, vul 'geen' in.");
         return;
     }
     
@@ -173,7 +173,7 @@ function addReservation() {
     }
     
     if (!filamentColor.trim()) {
-        alert("Voer filament kleur in.");
+        alert("kies filament kleur.");
         return;
     }
     
@@ -380,23 +380,33 @@ function updateTimeSlots() {
 
 // Initialize everything when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    updateFormStructure();
-    document.addEventListener('DOMContentLoaded', function () {
-        const filamentSelect = document.getElementById("filamentType");
-        const customFilamentField = document.getElementById("customFilament");
-    
-        // Verberg standaard het extra invoerveld
-        customFilamentField.style.display = "none";
-    
-        filamentSelect.addEventListener("change", function () {
-            if (filamentSelect.value === "Andere") {
-                customFilamentField.style.display = "block";
-            } else {
-                customFilamentField.style.display = "none";
-            }
-        });
+    const filamentSelect = document.getElementById("filamentType");
+    const customFilamentField = document.getElementById("customFilament");
+
+    const colorSelect = document.getElementById("filamentColor");
+    const colorField = document.getElementById("customColor");
+
+    // Verberg standaard het extra invoerveld
+    customFilamentField.style.display = "none";
+    colorField.style.display = "none";
+
+    filamentSelect.addEventListener("change", function () {
+        customFilamentField.style.display = (filamentSelect.value === "Andere") ? "block" : "none";
     });
-    
+
+    colorSelect.addEventListener("change", function () {
+        colorField.style.display = (colorSelect.value === "Andere") ? "block" : "none";
+    });
+
+    document.getElementById("nextToStep2").addEventListener("click", goToStep2);
+    document.getElementById("submitReservation").addEventListener("click", addReservation);
+   
+    // Initialize Materialize components if available
+    if (typeof M !== 'undefined') {
+        M.FormSelect.init(document.querySelectorAll('select'));
+    }
+
+    updateFormStructure();
     generateTimeOptions();
     updateTimeSlots();
 });

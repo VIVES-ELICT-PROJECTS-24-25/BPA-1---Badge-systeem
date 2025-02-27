@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = document.getElementById('password').value;
         
         if (login(username, password)) {
-            const intended = localStorage.getItem('intendedUrl') || 'mijnKalender.php';
+            const intended = localStorage.getItem('intendedUrl') || 'mijnKalender.html';
             localStorage.removeItem('intendedUrl');
             window.location.href = intended;
         } else {
