@@ -1,36 +1,31 @@
-// auth.js
-const VALID_CREDENTIALS = {
-    username: 'student',
-    password: 'vives'
-};
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('loginForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('password', password);
 
-function checkAuth() {
-    return localStorage.getItem('isLoggedIn') === 'true';
-}
+        try {
+            const response = await fetch('checkLogin.php', {
+                method: 'POST',
+                body: formData
+            });
 
-function login(username, password) {
-    if (username === VALID_CREDENTIALS.username && 
-        password === VALID_CREDENTIALS.password) {
-        localStorage.setItem('isLoggedIn', 'true');
-        return true;
-    }
-    return false;
-}
+            const result = await response.json();
 
-function logout() {
-    localStorage.removeItem('isLoggedIn');
-    window.location.href = 'index.html';
-}
-
-function protectRoute() {
-    const protectedPages = ['mijnKalender.html', 'reservatie.html'];
-    const currentPage = window.location.pathname.split('/').pop();
-    
-    if (protectedPages.includes(currentPage) && !checkAuth()) {
-        localStorage.setItem('intendedUrl', currentPage);
-        window.location.href = 'index.html';
-    }
-}
-
-// Run route protection on page load
-document.addEventListener('DOMContentLoaded', protectRoute);
+            if (result.success) {
+                localStorage.setItem('isLoggedIn', 'true');
+                window.location.href = localStorage.getItem('intendedUrl') || 'mijnKalender.html';
+            } else {
+                alert('Ongeldige inloggegevens');
+            }
+        } catch (error) {
+            console.error('Fout bij inloggen:', error);
+            alert('Er is een fout opgetreden. Probeer opnieuw.');
+        }
+    });
+});
