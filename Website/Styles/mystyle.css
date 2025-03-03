@@ -4,7 +4,13 @@
     --vivesOffWhite: #f8f9fa;
     --vivesDark: #212529;
     --vivesGray: #6c757d;
+    --vivesBlue: #3b82f6;
+    --vivesGreen: #10b981;
+    --vivesOrange: #f97316;
     --navHeight: 64px;
+    --containerWidth: 1200px;
+    --borderRadius: 8px;
+    --boxShadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -19,15 +25,22 @@ body {
     color: var(--vivesDark);
 }
 
+.container {
+    max-width: var(--containerWidth);
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* Navbar Styles - Improved */
 .navbar {
     background: white;
     height: var(--navHeight);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--boxShadow);
     position: relative;
 }
 
 .nav-container {
-    max-width: 1200px;
+    max-width: var(--containerWidth);
     margin: 0 auto;
     padding: 0 1rem;
     height: 100%;
@@ -52,6 +65,10 @@ body {
     list-style: none;
     gap: 1.5rem;
     align-items: center;
+}
+
+.nav-item {
+    position: relative;
 }
 
 .nav-link {
@@ -122,39 +139,31 @@ body {
     transform: rotate(-45deg);
 }
 
-@media (max-width: 768px) {
-    .nav-toggle {
-        display: block;
-    }
-
-    .nav-menu {
-        position: absolute;
-        top: var(--navHeight);
-        left: 0;
-        right: 0;
-        background: white;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease-in-out;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .nav-menu.active {
-        max-height: 400px;
-    }
-
-    .nav-item {
-        border-top: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .nav-link {
-        padding: 1rem;
-        justify-content: flex-start;
-    }
+/* Common Button Styles */
+.btn {
+    background: var(--vivesRed);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    display: inline-block;
+    
 }
+
+.btn:hover {
+    background: var(--vivesRedLight);
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+/* Disabled nav items */
 .nav-item.disabled {
     opacity: 0.5;
     pointer-events: none;
@@ -174,16 +183,17 @@ body {
     font-size: 0.8rem;
     margin-top: 2.5rem;
     white-space: nowrap;
+    z-index: 10;
 }
 
-/* Login form styling verbeteren */
+/* Login form styling */
 .login-container {
     max-width: 400px;
     margin: 4rem auto;
     padding: 2rem;
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: var(--borderRadius);
+    box-shadow: var(--boxShadow);
 }
 
 .login-container h2 {
@@ -195,4 +205,67 @@ body {
     color: var(--vivesRed);
     margin-top: 1rem;
     font-size: 0.9rem;
+}
+
+/* Common Form Elements */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--vivesBlue);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--vivesDark);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .nav-toggle {
+        display: block;
+    }
+
+    .nav-menu {
+        position: absolute;
+        top: var(--navHeight);
+        left: 0;
+        right: 0;
+        background: white;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-in-out;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+    }
+
+    .nav-menu.active {
+        max-height: 400px;
+    }
+
+    .nav-item {
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-link {
+        padding: 1rem;
+        justify-content: flex-start;
+    }
 }
