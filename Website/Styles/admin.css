@@ -1,0 +1,19 @@
+.nav-tabs .nav-link {
+    color: #2c3e50;
+}
+.nav-tabs .nav-link.active {
+    font-weight: bold;
+    color: #2980b9;
+}
+.status-available {
+    background-color: #d4edda;
+}
+.status-maintenance {
+    background-color: #fff3cd;
+}
+.status-unavailable {
+    background-color: #f8d7da;
+}
+.table-responsive {
+    margin-bottom: 2rem;
+}
