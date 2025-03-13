@@ -1,0 +1,397 @@
+:root {
+    --vivesRed: #e00020;
+    --vivesRedLight: #ff1a1a;
+    --vivesOffWhite: #f8f9fa;
+    --vivesDark: #212529;
+    --vivesGray: #6c757d;
+    --navHeight: 64px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--vivesOffWhite);
+    color: var(--vivesDark);
+}
+
+.navbar {
+    background: white;
+    height: var(--navHeight);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-logo {
+    height: calc(var(--navHeight) - 16px);
+    display: flex;
+    align-items: center;
+}
+
+.nav-logo img {
+    height: 100%;
+    width: auto;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.nav-link {
+    color: var(--vivesDark);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 0.5rem;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: var(--vivesRed);
+}
+
+.nav-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.hamburger {
+    display: block;
+    position: relative;
+    width: 24px;
+    height: 2px;
+    background: var(--vivesDark);
+    transition: all 0.3s ease-in-out;
+}
+
+.hamburger::before,
+.hamburger::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 2px;
+    background: var(--vivesDark);
+    transition: all 0.3s ease-in-out;
+}
+
+.hamburger::before {
+    transform: translateY(-8px);
+}
+
+.hamburger::after {
+    transform: translateY(8px);
+}
+
+.nav-toggle.active .hamburger {
+    background: transparent;
+}
+
+.nav-toggle.active .hamburger::before {
+    transform: rotate(45deg);
+}
+
+.nav-toggle.active .hamburger::after {
+    transform: rotate(-45deg);
+}
+
+@media (max-width: 768px) {
+    .nav-toggle {
+        display: block;
+    }
+
+    .nav-menu {
+        position: absolute;
+        top: var(--navHeight);
+        left: 0;
+        right: 0;
+        background: white;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-in-out;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-menu.active {
+        max-height: 400px;
+    }
+
+    .nav-item {
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-link {
+        padding: 1rem;
+        justify-content: flex-start;
+    }
+}
+.nav-item.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.nav-item.disabled .nav-link {
+    cursor: not-allowed;
+}
+
+.nav-item.disabled:hover::after {
+    content: 'Login vereist';
+    position: absolute;
+    background: var(--vivesDark);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-top: 2.5rem;
+    white-space: nowrap;
+}
+
+/* Login form styling verbeteren */
+.login-container {
+    max-width: 400px;
+    margin: 4rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-container h2 {
+    margin-bottom: 1.5rem;
+    color: var(--vivesRed);
+}
+
+.login-error {
+    color: var(--vivesRed);
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+/* Main container styling */
+.photo-info {
+    max-width: 1200px;
+    margin: 3rem auto;
+    padding: 0 2rem;
+}
+
+/* Individual printer item styling */
+.photo-item {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    margin-bottom: 4rem;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.photo-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Image styling */
+.photo-item img {
+    width: 400px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.photo-item img:hover {
+    transform: scale(1.05);
+}
+
+/* Text content styling */
+.photo-text {
+    flex: 1;
+    padding: 1rem;
+}
+
+.photo-text h2 {
+    font-size: 2rem;
+    color: var(--vivesDark);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.photo-text p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--vivesGray);
+}
+
+/* Reverse layout for alternating items */
+.photo-item.reverse {
+    flex-direction: row-reverse;
+}
+
+/* Add a subtle border */
+.photo-item {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive design */
+@media (max-width: 900px) {
+    .photo-item,
+    .photo-item.reverse {
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .photo-item img {
+        width: 100%;
+        height: 250px;
+    }
+
+    .photo-text {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Add smooth scrolling to the page */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Optional: Add a subtle animation when elements come into view */
+.photo-item {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Ensure each item animates sequentially */
+.photo-item:nth-child(1) { animation-delay: 0.2s; }
+.photo-item:nth-child(2) { animation-delay: 0.4s; }
+.photo-item:nth-child(3) { animation-delay: 0.6s; }
+
+/* Voeg deze stijlen toe aan het einde van je bestaande mystyle.css */
+
+/* Update deze stijlen in je bestaande mystyle.css */
+
+.login-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.login-container label {
+    color: var(--vivesDark);
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+    display: block;
+}
+
+.login-container input {
+    padding: 0.8rem;
+    border: 1.5px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 100%;
+    background-color: white;
+    color: var(--vivesDark);
+}
+
+.login-container input:focus {
+    outline: none;
+    border-color: var(--vivesRed);
+    box-shadow: 0 0 0 2px rgba(224, 0, 32, 0.1);
+}
+
+.login-container button {
+    background-color: var(--vivesRed);
+    color: white;
+    padding: 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    margin-top: 0.5rem;
+}
+
+.login-container button:hover {
+    background-color: var(--vivesRedLight);
+}
+
+.login-link {
+    margin-top: 1.5rem;
+    text-align: center;
+    color: var(--vivesDark);
+    font-size: 0.95rem;
+}
+
+.login-link a {
+    color: var(--vivesRed);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
+
+/* Validatie stijlen */
+input:invalid {
+    border-color: #ddd;  /* Standaard border tot er echt gevalideerd wordt */
+}
+
+input:valid {
+    border-color: #4CAF50;
+}
+
+input:focus:invalid {
+    border-color: var(--vivesRed);
+}
+
+.error-message {
+    color: var(--vivesRed);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+    font-weight: 500;
+}

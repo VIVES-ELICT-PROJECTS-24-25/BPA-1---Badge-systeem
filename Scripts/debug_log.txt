@@ -1,0 +1,18 @@
+2025-02-27 17:32:19 POST data: Array
+(
+    [username] => student
+    [password] => vives
+)
+
+Comparing: 'student' with 'vives' and 'vives' with 'student'
+After sanitization: username='student', password='vives'
+Hardcoded login failed, trying database
+2025-02-27 17:32:44 POST data: Array
+(
+    [username] => vives
+    [password] => student
+)
+
+Comparing: 'vives' with 'vives' and 'student' with 'student'
+After sanitization: username='vives', password='student'
+Hardcoded login successful
