@@ -1,3 +1,47 @@
+<?php
+// Start session to manage user authentication
+session_start();
+
+// Check if user is logged in - redirect to login page if not
+if (!isset($_SESSION['user_id'])) {
+    // Uncomment the following line when your login system is ready
+    // header('Location: login.php');
+    // exit;
+    
+    // For development, we'll set a mock user
+    $_SESSION['user_id'] = 1;
+    $_SESSION['username'] = 'Alexatkind';
+    $_SESSION['voornaam'] = 'Alex';
+    $_SESSION['naam'] = 'Atkind';
+}
+
+// Include configuration
+require_once 'sites/config.php';
+
+// Function to get printers from the API
+function getPrinters() {
+    $conn = getConnection();
+    $query = "SELECT * FROM Printer";
+    $result = $conn->query($query);
+    
+    $printers = [];
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $printers[] = $row;
+        }
+    }
+    
+    $conn->close();
+    return $printers;
+}
+
+// Get all printers for the form
+$printers = getPrinters();
+
+// Current date in the required format for date input
+$currentDate = date('Y-m-d');
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,22 +53,20 @@
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-    <!-- Externe CSS en JS voor kalender -->
+    <!-- External CSS -->
     <link href="Styles/kalender.css" rel="stylesheet">
-    <script src="Scripts/kalender.js"></script>
+    <link rel="stylesheet" href="Styles/mystyle.css">
+    <link rel="stylesheet" href="Styles/reservatie.css">
+
+    <!-- External JavaScript -->
     <script src="Scripts/auth.js"></script>
     <script src="Scripts/navigation.js"></script>
-
-    <!-- Externe CSS voor de layout -->
-    <link rel="stylesheet" href="Styles/mystyle.css">
-    <script src="Scripts/kalender.js"></script>
-
 </head>
 <body>
 
     <nav class="navbar">
     <div class="nav-container">
-        <a href="index.html" class="nav-logo">
+        <a href="login.php" class="nav-logo">
             <img src="images/vives smile.svg" alt="Vives Logo" />
         </a>
         
@@ -34,7 +76,7 @@
 
         <ul class="nav-menu">
             <li class="nav-item">
-                <a href="reservatie.html" class="nav-link">
+                <a href="reservatie.php" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="12" y1="8" x2="12" y2="16"/>
@@ -44,7 +86,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="mijnKalender.html" class="nav-link">
+                <a href="mijnKalender.php" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                         <line x1="16" y1="2" x2="16" y2="6"/>
@@ -55,7 +97,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="printers.html" class="nav-link">
+                <a href="printers.php" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M6 9V2h12v7"/>
                         <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
@@ -65,7 +107,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="uitlog.html" class="nav-link">
+                <a href="uitlog.php" class="nav-link">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
                         <polyline points="16 17 21 12 16 7"/>
@@ -79,6 +121,15 @@
 </nav>
 
   <div class="container">
+    <!-- User info display -->
+    <div class="user-info">
+        <span>Ingelogd als: <span id="current-user"><?php echo htmlspecialchars($_SESSION['username']); ?></span></span>
+        <input type="hidden" id="user_id" value="<?php echo $_SESSION['user_id']; ?>">
+    </div>
+    
+    <!-- Message container for success/error messages -->
+    <div id="messageContainer"></div>
+    
     <!-- Updated form-container section with two-step form structure -->
     <div class="form-container">
         <!-- Stap 1: Basisgegevens -->
@@ -86,20 +137,22 @@
             <div class="input-field">
                 <label for="printer">Printer:</label>
                 <select id="printer">
-                    <option value="printerA">Ender3 V3 (3DP01)</option>
-                    <option value="printerB">Ender3 V2 (3DP02)</option>
-                    <option value="printerC">Ender3 PRO (3DP03)</option>
+                    <?php foreach($printers as $printer): ?>
+                        <option value="<?php echo $printer['Printer_ID']; ?>">
+                            <?php echo htmlspecialchars($printer['Naam']) . ' (' . htmlspecialchars($printer['Status']) . ')'; ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
 
             <div class="input-field">
                 <label for="date">Datum:</label>
-                <input type="date" id="date" onchange="onDateChange()">
+                <input type="date" id="date" value="<?php echo $currentDate; ?>" min="<?php echo $currentDate; ?>">
             </div>
 
             <div class="input-field">
                 <label for="eventName">Naam:</label>
-                <input type="text" id="eventName" placeholder="Voer je naam in">
+                <input type="text" id="eventName" value="<?php echo htmlspecialchars($_SESSION['voornaam'] . ' ' . $_SESSION['naam']); ?>" readonly>
             </div>
 
             <div class="input-field">
@@ -138,14 +191,9 @@
             <div class="input-field">
                 <label for="filamentColor">Kleur filament</label>
                 <select id="filamentColor">
-                    <option value="Zwart">Zwart</option>
-                    <option value="Wit">Wit</option>
-                    <option value="Blauw">Blauw</option>
-                    <option value="Rood">Rood</option>
-                    <option value="Geel">Geel</option>
-                    <option value="Andere">Andere...</option>
                 </select>
-                <input type="text" id="customColor" placeholder="kies een kleur ..." />            </div>
+                <input type="text" id="customColor" placeholder="kies een kleur ..." />
+            </div>
             
             <div class="input-field">
                 <label for="filamentWeight">Hoeveelheid filament (gram)</label>
@@ -153,6 +201,7 @@
             </div>
             
             <div class="input-field">
+                <button type="button" id="backToStep1" class="btn" style="background-color: #888;">Terug</button>
                 <button type="button" id="submitReservation" class="btn">Reservatie toevoegen</button>
             </div>
         </div>
@@ -161,24 +210,37 @@
     <div class="timeline-container">
         <div class="rooms">
             <div> </div>
-            <div>Ender3 V3 (3DP01)</div>
-            <div>Ender3 V2 (3DP02)</div>
-            <div>Ender3 PRO (3DP03)</div>
+            <?php foreach($printers as $printer): ?>
+                <div><?php echo htmlspecialchars($printer['Naam']); ?></div>
+            <?php endforeach; ?>
         </div>
 
         <!-- Timeline Grid -->
         <div class="timeline">
             <!-- Time Row -->
-            <div class="timeline-row"></div>
+            <div class="timeline-row" id="timeHeader"></div>
 
             <!-- Printer Rows -->
-            <div class="timeline-row" id="printerA"></div>
-            <div class="timeline-row" id="printerB"></div>
-            <div class="timeline-row" id="printerC"></div>
+            <?php foreach($printers as $index => $printer): ?>
+                <div class="timeline-row" id="printer<?php echo $printer['Printer_ID']; ?>"></div>
+            <?php endforeach; ?>
         </div>
     </div>
   </div>
-  <script src="Scripts/algemene.js"></script>
-
+  
+  <!-- Pass PHP data to JavaScript -->
+  <script>
+    // Current user information from PHP session
+    const currentUser = {
+        userId: <?php echo $_SESSION['user_id']; ?>,
+        name: '<?php echo addslashes($_SESSION['username']); ?>'
+    };
+    
+    // Pass printers data to JavaScript
+    const initialPrinters = <?php echo json_encode($printers); ?>;
+  </script>
+  
+  <!-- Include the reservation script -->
+  <script src="Scripts/reservatie.js"></script>
 </body>
 </html>

@@ -1,5 +1,3 @@
-/* Calendar-specific styles - Assumes mystyle.css is loaded first */
-
 /* Form Container */
 .form-container {
     background: white;
@@ -36,6 +34,12 @@
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+/* User info display */
+.user-info {
+    text-align: right;
+    margin-bottom: 15px;
+}
+
 /* Custom fields */
 #customFilament, #customColor {
     display: none; /* Hidden by default */
@@ -45,6 +49,27 @@
     border-radius: 6px;
     font-size: 14px;
     width: 100%;
+}
+
+/* Message styling */
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 5px;
+    padding: 10px;
+    background-color: rgba(255, 0, 0, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+.success-message {
+    color: green;
+    font-size: 14px;
+    margin-top: 5px;
+    padding: 10px;
+    background-color: rgba(76, 175, 80, 0.1);
+    border-radius: 4px;
+    border: 1px solid rgba(76, 175, 80, 0.2);
 }
 
 /* Rooms Column */
@@ -86,20 +111,24 @@
     height: 60px;
     border-bottom: 1px solid #e5e7eb;
     position: relative;
+    white-space: nowrap;
 }
 
-.time-slot {
+/* Time blocks in header row */
+.time-block {
     border-right: 1px solid #e5e7eb;
     text-align: center;
     font-size: 14px;
     color: var(--vivesGray);
-    width: 100%;
     box-sizing: border-box;
-    padding: 20px;
+    padding: 20px 0;
+    height: 60px;
+    display: inline-block;
+    width: calc(100% / 13); /* For 13 hours from 6AM to 6PM */
 }
 
-/* Events */
-.event {
+/* Reservation blocks on timeline */
+.reservation-block {
     position: absolute;
     top: 8px;
     height: 44px;
@@ -113,70 +142,19 @@
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
-    box-shadow: var(--boxShadow);
+    background-color: #4CAF50;
+    border: 1px solid var(--vivesGreen);
+    color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    z-index: 1;
+    z-index: 10;
     box-sizing: border-box;
     cursor: pointer;
 }
 
-.event:hover {
+.reservation-block:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Event title */
-.event-title {
-    display: block;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
-    width: 100%;
-    text-align: center;
-}
-
-/* Tooltip using ::before pseudo-element */
-.event::before {
-    content: attr(data-start-time) " - " attr(data-end-time);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-bottom: 5px;
-    background-color: var(--vivesDark);
-    color: white;
-    text-align: center;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
-    pointer-events: none;
-    z-index: 10;
-}
-
-.event::after {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent var(--vivesDark) transparent;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
-    pointer-events: none;
-}
-
-/* Show tooltip on hover */
-.event:hover::before,
-.event:hover::after {
-    opacity: 1;
-    visibility: visible;
 }
 
 /* Event Colors - Using variables from mystyle.css */
@@ -204,6 +182,30 @@
     color: white;
 }
 
+/* Form step styling */
+.form-step {
+    margin-bottom: 20px;
+}
+
+.input-field {
+    margin-bottom: 15px;
+}
+
+.btn {
+    padding: 10px 15px;
+    background-color: var(--vivesBlue);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.btn:hover {
+    background-color: #0069d9;
+}
+
 /* Responsive Design for Calendar */
 @media (max-width: 768px) {
     .form-container {
@@ -217,5 +219,10 @@
     .rooms div {
         padding: 12px;
         font-size: 14px;
+    }
+    
+    .time-block {
+        padding: 12px 0;
+        font-size: 12px;
     }
 }
