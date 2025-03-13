@@ -3,7 +3,7 @@ session_start();
 
 // Controleer of de gebruiker al ingelogd is
 if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
-    header("Location: adminv1.php");
+    header("Location: admin.php");
     exit;
 }
 
@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($username === 'admin' && $password === 'admin') {
         $_SESSION['loggedin'] = true;
         $_SESSION['username'] = $username;
-        header("Location: adminv1.php"); // Stuur door naar adminpagina
+        header("Location: admin.php"); // Stuur door naar adminpagina
         exit;
     } else {
         $error = "Ongeldige gebruikersnaam of wachtwoord.";
