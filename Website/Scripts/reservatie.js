@@ -8,13 +8,15 @@ let selectedDate = new Date();
 let availablePrinters = [];
 let timeslots = [];
 let reservations = {};
-let events = []; // From your existing code
 
+// Initialize the page
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
     // Set today's date as default
     const dateInput = document.getElementById('date');
-    selectedDate = new Date(dateInput.value);
+    if (dateInput) {
+        selectedDate = new Date(dateInput.value);
+    }
     
     // Initialize the form
     initializeForm();
@@ -23,20 +25,45 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPrinters();
     
     // Event listeners for form navigation
-    document.getElementById('nextToStep2').addEventListener('click', goToStep2);
-    document.getElementById('backToStep1').addEventListener('click', () => {
-        document.getElementById('step2Container').style.display = 'none';
-        document.getElementById('step1Container').style.display = 'block';
-    });
-    document.getElementById('submitReservation').addEventListener('click', submitReservation);
+    const nextToStep2Button = document.getElementById('nextToStep2');
+    if (nextToStep2Button) {
+        nextToStep2Button.addEventListener('click', goToStep2);
+    }
+    
+    const backToStep1Button = document.getElementById('backToStep1');
+    if (backToStep1Button) {
+        backToStep1Button.addEventListener('click', () => {
+            document.getElementById('step2Container').style.display = 'none';
+            document.getElementById('step1Container').style.display = 'block';
+        });
+    }
+    
+    const submitReservationButton = document.getElementById('submitReservation');
+    if (submitReservationButton) {
+        submitReservationButton.addEventListener('click', submitReservation);
+    }
     
     // Event listener for filament type and color custom options
-    document.getElementById('filamentType').addEventListener('change', handleCustomFilamentType);
-    document.getElementById('filamentColor').addEventListener('change', handleCustomFilamentColor);
+    const filamentTypeSelect = document.getElementById('filamentType');
+    if (filamentTypeSelect) {
+        filamentTypeSelect.addEventListener('change', handleCustomFilamentType);
+    }
+    
+    const filamentColorSelect = document.getElementById('filamentColor');
+    if (filamentColorSelect) {
+        filamentColorSelect.addEventListener('change', handleCustomFilamentColor);
+    }
     
     // Hide custom input fields initially
-    document.getElementById('customFilament').style.display = 'none';
-    document.getElementById('customColor').style.display = 'none';
+    const customFilament = document.getElementById('customFilament');
+    if (customFilament) {
+        customFilament.style.display = 'none';
+    }
+    
+    const customColor = document.getElementById('customColor');
+    if (customColor) {
+        customColor.style.display = 'none';
+    }
     
     // Initialize the time slots in the timeline
     updateTimeSlots();
@@ -44,13 +71,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load printers from PHP (passed via initialPrinters variable)
 async function loadPrinters() {
-    availablePrinters = initialPrinters;
-    
-    // After loading printers, load their reservations
-    await loadAllPrinterReservations();
-    
-    // Initialize timeline
-    updateTimeline();
+    try {
+        // Check if initialPrinters is defined
+        if (typeof initialPrinters !== 'undefined') {
+            availablePrinters = initialPrinters;
+        } else {
+            console.warn("initialPrinters not defined, using empty array");
+            availablePrinters = [];
+        }
+        
+        // After loading printers, load their reservations
+        await loadAllPrinterReservations();
+        
+        // Initialize timeline
+        updateTimeline();
+    } catch (error) {
+        console.error("Error in loadPrinters:", error);
+    }
 }
 
 // Load reservations for all available printers
@@ -360,7 +397,7 @@ function goToStep2() {
     // Simple validation
     const eventName = document.getElementById('eventName').value.trim();
     if (!eventName) {
-        showMessage("Vul alstublieft een naam in.", "error");
+        alert("Vul alstublieft een naam in.");
         return;
     }
     

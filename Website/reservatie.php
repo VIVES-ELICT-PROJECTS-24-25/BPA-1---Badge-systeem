@@ -39,6 +39,8 @@ function callAPI($method, $endpoint, $data = null) {
 // Get all printers from the API
 $printers = callAPI('GET', '/api/printer_api.php', null);
 $reservations = callAPI('GET', '/api/reservatie_api.php', null);
+
+
 ?>
 
 <!DOCTYPE html>
@@ -54,8 +56,8 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
 
     <!-- Externe CSS en JS voor kalender -->
     <link href="Styles/reservatie.css" rel="stylesheet">
-
-    <!-- Externe CSS voor de layout -->
+    <!-- Materialize CSS and JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
 </head>
 <body>
@@ -220,8 +222,10 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
         let apiPrinters = <?= json_encode(isset($printers['data']['data']) ? $printers['data']['data'] : []); ?>;
         let apiReservations = <?= json_encode(isset($reservations['data']['data']) ? $reservations['data']['data'] : []); ?>;
         let events = []; // Will store formatted events for the calendar
-
-        // Convert API reservations to the format needed for the calendar
+        
+        // Make printer data available to reservatie.js
+        let initialPrinters = apiPrinters;
+            // Convert API reservations to the format needed for the calendar
         function convertReservationsToEvents() {
             events = [];
             
@@ -446,6 +450,46 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
             const today = new Date().toISOString().split('T')[0];
             document.getElementById("date").value = today;
             
+            // Add this function to your inline script in reservatie.php
+            function generateTimeOptions() {
+                const timeSelect = document.getElementById('startTime');
+                if (!timeSelect) return;
+                
+                timeSelect.innerHTML = ''; // Clear existing options
+                
+                // Generate time slots from 6 AM to 6 PM in 15-minute increments
+                for (let hour = 6; hour < 18; hour++) {
+                    for (let minute = 0; minute < 60; minute += 15) {
+                        const value = hour + minute/60; // Store as decimal for calculations
+                        const displayHour = hour > 12 ? hour - 12 : hour;
+                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                        const displayMinute = minute === 0 ? '00' : minute;
+                        const displayText = `${displayHour}:${displayMinute} ${ampm}`;
+                        
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = displayText;
+                        timeSelect.appendChild(option);
+                    }
+                }
+            }
+
+            function updateTimeSlots() {
+                // Create time headers (6:00 AM - 6:00 PM)
+                const timeRow = document.getElementById('timeHeader');
+                if (!timeRow) return;
+                
+                timeRow.innerHTML = ''; // Clear existing
+                
+                // Add time slots from 6AM to 6PM
+                for (let hour = 6; hour <= 18; hour++) {
+                    const timeSlot = document.createElement('div');
+                    timeSlot.className = 'time-block';
+                    timeSlot.textContent = hour <= 12 ? `${hour}AM` : `${hour-12}PM`;
+                    timeRow.appendChild(timeSlot);
+                }
+            }
+
             // Initialize time options and grid
             generateTimeOptions();
             updateTimeSlots();

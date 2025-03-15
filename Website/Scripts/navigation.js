@@ -10,13 +10,13 @@ function updateNavigation() {
     const logoutLink = navMenu.querySelector('a[href="uitlog.php"]')?.parentElement;
     
     if (isLoggedIn) {
-        reservatieLink?.classList.remove('disabled');
-        kalenderLink?.classList.remove('disabled');
-        logoutLink?.style.display = 'list-item';
+        if (reservatieLink) reservatieLink.classList.remove('disabled');
+        if (kalenderLink) kalenderLink.classList.remove('disabled');
+        if (logoutLink) logoutLink.style.display = 'list-item';
     } else {
-        reservatieLink?.classList.add('disabled');
-        kalenderLink?.classList.add('disabled');
-        logoutLink?.style.display = 'none';
+        if (reservatieLink) reservatieLink.classList.add('disabled');
+        if (kalenderLink) kalenderLink.classList.add('disabled');
+        if (logoutLink) logoutLink.style.display = 'none';
     }
 }
 
