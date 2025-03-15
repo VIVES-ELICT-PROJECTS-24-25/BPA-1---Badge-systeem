@@ -48,25 +48,22 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reservatie</title>
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
-
+    <link rel="stylesheet" href="Styles/mystyle.css">
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- Externe CSS en JS voor kalender -->
     <link href="Styles/reservatie.css" rel="stylesheet">
-    <script src="Scripts/reservatie.js"></script>
-    <script src="Scripts/auth.js"></script>
-    <script src="Scripts/navigation.js"></script>
 
     <!-- Externe CSS voor de layout -->
-    <link rel="stylesheet" href="Styles/mystyle.css">
+
 </head>
 <body>
 
     <nav class="navbar">
         <div class="nav-container">
-            <a href="index.html" class="nav-logo">
-                <img src="images/vives smile.svg" alt="Vives Logo" />
+            <a href="index.php" class="nav-logo">
+                <img src="images/vives_smile.svg" alt="Vives Logo" />
             </a>
             
             <button class="nav-toggle" aria-label="Open menu">
@@ -76,42 +73,25 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
             <ul class="nav-menu">
                 <li class="nav-item">
                     <a href="reservatie.php" class="nav-link">
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="12" y1="8" x2="12" y2="16"/>
-                            <line x1="8" y1="12" x2="16" y2="12"/>
-                        </svg>
+
                         Reserveer een printer
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="mijnKalender.html" class="nav-link">
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="16" y1="2" x2="16" y2="6"/>
-                            <line x1="8" y1="2" x2="8" y2="6"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
-                        </svg>
+                    <a href="mijnKalender.php" class="nav-link">
+
                         Mijn reservaties
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="printers.html" class="nav-link">
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M6 9V2h12v7"/>
-                            <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
-                            <rect x="6" y="14" width="12" height="8"/>
-                        </svg>
+                    <a href="printers.php" class="nav-link">
+
                         Info over printers
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="uitlog.html" class="nav-link">
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                            <polyline points="16 17 21 12 16 7"/>
-                            <line x1="21" y1="12" x2="9" y2="12"/>
-                        </svg>
+                    <a href="uitlog.php" class="nav-link">
+
                         Log uit
                     </a>
                 </li>
@@ -234,8 +214,6 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
             </div>
         </div>
     </div>
-
-    <script src="Scripts/algemene.js"></script>
 
     <script>
         // Global variables to store data from the API
@@ -476,5 +454,11 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
             onDateChange();
         });
     </script>
+
+    <script src="Scripts/algemene.js"></script>
+    <script src="Scripts/auth.js"></script>
+    <script src="Scripts/navigation.js"></script>
+    <script src="Scripts/reservatie.js"></script>
+
 </body>
 </html>

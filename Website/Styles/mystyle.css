@@ -50,7 +50,7 @@ body {
 }
 
 .nav-logo {
-    height: calc(var(--navHeight) - 16px);
+    height: calc(var(--navHeight) - 30px);
     display: flex;
     align-items: center;
 }
@@ -88,8 +88,8 @@ body {
 }
 
 .nav-icon {
-    width: 20px;
-    height: 20px;
+    width: 10px;
+    height: 10px;
 }
 
 .nav-toggle {

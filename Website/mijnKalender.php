@@ -1,3 +1,16 @@
+<?php
+// admin.php - Beheerderspagina voor MaakLab
+session_start();
+
+// Controleer of de gebruiker is ingelogd en een admin rol heeft
+// Dit zou normaal gesproken worden geverifieerd met een login systeem
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    // Redirect naar login pagina als niet ingelogd of geen admin
+    header("Location: sites/login.php");
+    exit;
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +28,7 @@
 <body>   
     <nav class="navbar">
         <div class="nav-container">
-            <a href="index.html" class="nav-logo">
+            <a href="index.php" class="nav-logo">
                 <img src="images/vives smile.svg" alt="Vives Logo" />
             </a>
             
@@ -26,17 +39,6 @@
             <ul class="nav-menu">
                 <li class="nav-item">
                     <a href="admin.php" class="nav-link">
-                        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="12" y1="8" x2="12" y2="16"/>
-                            <line x1="8" y1="12" x2="16" y2="12"/>
-                        </svg>
-                        Reserveer een printer
-                    </a>
-                </li>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="reservatie.php" class="nav-link">
                         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
                             <line x1="12" y1="8" x2="12" y2="16"/>
@@ -56,7 +58,7 @@
                         Mijn reservaties
                     </a>
                 </li>
-                    <a href="printers.html" class="nav-link">
+                    <a href="printers.php" class="nav-link">
                         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M6 9V2h12v7"/>
                             <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
@@ -66,7 +68,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="uitlog.html" class="nav-link">
+                    <a href="uitlog.php" class="nav-link">
                         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
                             <polyline points="16 17 21 12 16 7"/>
