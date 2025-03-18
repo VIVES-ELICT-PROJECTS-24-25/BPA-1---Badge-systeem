@@ -1,4 +1,5 @@
 # Dit script houdt de status van de Shelly-apparaten bij in Firebase
+# Met toegevoegde functionaliteit voor verbruiksgegevens
 
 import requests
 import time
@@ -10,11 +11,11 @@ from firebase_admin import credentials, db
 SHELLY_DEVICES = {
     "shelly1": {
         "name": "Shelly 1",
-        "ip": "172.20.10.3"
+        "ip": "192.168.0.219"
     },
     "shelly2": {
         "name": "Shelly 2",
-        "ip": "172.20.10.14"
+        "ip": "192.168.0.248"
     }
 }
 
@@ -31,21 +32,122 @@ firebase_admin.initialize_app(cred, {
 # Firebase referenties
 shellies_ref = db.reference("shellies")
 web_commands_ref = db.reference("web_commands")  # NIEUW: web commands node
+power_usage_ref = db.reference("power_usage")  # NIEUW: node voor verbruiksgegevens
 
 # Status lock bijhouden - voorkomt race conditions
 device_locks = {}
 
+# NIEUW: Functie om stroomsterkte en spanning op te halen
+def get_shelly_electrical_data(ip_address):
+    try:
+        # Probeer eerst de Gen2 RPC API
+        url = f"http://{ip_address}/rpc/Switch.GetStatus?id=0"
+        response = requests.get(url, timeout=5)
+        
+        if response.status_code == 200:
+            data = response.json()
+            voltage = data.get("voltage", 0)
+            current = data.get("current", 0)
+            
+            # Bereken het wattage op basis van spanning en stroom (P = U * I)
+            calculated_power = round(voltage * current, 2)
+            
+            # Vergelijk het berekende vermogen met het gerapporteerde vermogen
+            reported_power = data.get("apower", 0)
+            
+            return {
+                "voltage": voltage,
+                "current": current,
+                "calculated_power": calculated_power,
+                "reported_power": reported_power,
+                "total_energy": data.get("aenergy", {}).get("total", 0),
+                "temperature": data.get("temperature", {}).get("tC", 0),
+                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "valid_data": True
+            }
+            
+        # Probeer oude API als Gen2 niet werkt
+        url = f"http://{ip_address}/status"
+        response = requests.get(url, timeout=5)
+        
+        if response.status_code == 200:
+            data = response.json()
+            meters = data.get("meters", [])
+            if meters and len(meters) > 0:
+                voltage = meters[0].get("voltage", 0)
+                current = meters[0].get("current", 0)
+                
+                # Bereken het wattage op basis van spanning en stroom (P = U * I)
+                calculated_power = round(voltage * current, 2)
+                
+                # Vergelijk het berekende vermogen met het gerapporteerde vermogen
+                reported_power = meters[0].get("power", 0)
+                
+                return {
+                    "voltage": voltage,
+                    "current": current,
+                    "calculated_power": calculated_power,
+                    "reported_power": reported_power,
+                    "total_energy": meters[0].get("total", 0),
+                    "temperature": data.get("temperature", 0) if "temperature" in data else 0,
+                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "valid_data": True
+                }
+                
+        return {
+            "voltage": 0,
+            "current": 0,
+            "calculated_power": 0,
+            "reported_power": 0,
+            "total_energy": 0,
+            "temperature": 0,
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "error": "Geen verbruiksgegevens beschikbaar",
+            "valid_data": False
+        }
+        
+    except Exception as e:
+        print(f"Fout bij het ophalen van elektrische gegevens: {e}")
+        return {
+            "voltage": 0,
+            "current": 0,
+            "calculated_power": 0,
+            "reported_power": 0,
+            "total_energy": 0,
+            "temperature": 0,
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "error": str(e),
+            "valid_data": False
+        }
+
 # Functie om de status van een Shelly-apparaat op te halen
 def get_shelly_status(ip_address):
     try:
-        url = f"http://{ip_address}/status"
+        # Probeer eerst de Gen2 RPC API
+        url = f"http://{ip_address}/rpc/Switch.GetStatus?id=0"
         response = requests.get(url, timeout=5)
+        
         if response.status_code == 200:
             data = response.json()
-            return {
-                "state": "on" if data["relays"][0]["ison"] else "off",
-                "online": True
-            }
+            if "output" in data:
+                # Gen2 Shelly apparaat
+                return {
+                    "state": "on" if data["output"] else "off",
+                    "online": True
+                }
+        
+        # Probeer oude API als Gen2 niet werkt
+        url = f"http://{ip_address}/status"
+        response = requests.get(url, timeout=5)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "relays" in data and len(data["relays"]) > 0:
+                return {
+                    "state": "on" if data["relays"][0]["ison"] else "off",
+                    "online": True
+                }
+        
         return {"state": "unknown", "online": False}
     except Exception as e:
         print(f"Fout bij het ophalen van Shelly-status: {e}")
@@ -55,44 +157,52 @@ def get_shelly_status(ip_address):
 def control_shelly_device(device_id, device_config, target_state):
     try:
         print(f"Uitvoeren commando: {device_config['name']} -> {target_state}")
-        url = f"http://{device_config['ip']}/relay/0?turn={target_state}"
-        response = requests.get(url, timeout=5)
         
-        if response.status_code == 200:
-            print(f"Succesvol {device_config['name']} geschakeld naar {target_state}")
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
-            updates = {
-                "state": target_state,
-                "online": True,
-                "command_processed": True,
-                "last_toggled": timestamp
-            }
-            
-            # Als het apparaat wordt ingeschakeld, update de start_time
-            if target_state == "on":
-                updates["start_time"] = timestamp
-            
-            # BELANGRIJK: Wacht kort om te zorgen dat de status daadwerkelijk is gewijzigd
-            time.sleep(1)
-            
-            # Controleer of de status daadwerkelijk is gewijzigd
-            check_status = get_shelly_status(device_config["ip"])
-            if check_status["state"] == target_state:
-                print(f"Status bevestigd: {device_config['name']} is nu {check_status['state']}")
-            else:
-                print(f"WAARSCHUWING: {device_config['name']} heeft niet de verwachte status!")
-            
-            # Update de status in Firebase
-            shellies_ref.child(device_id).update(updates)
-            return True
+        # Probeer eerst de Gen2 RPC API
+        gen2_url = f"http://{device_config['ip']}/rpc/Switch.Set?id=0&on={target_state == 'on'}"
+        gen2_response = requests.get(gen2_url, timeout=5)
+        
+        if gen2_response.status_code == 200:
+            print(f"Succesvol {device_config['name']} geschakeld via Gen2 API naar {target_state}")
         else:
-            print(f"Fout bij het schakelen van {device_config['name']}: HTTP {response.status_code}")
-            shellies_ref.child(device_id).update({
-                "online": False,
-                "command_processed": True  # Markeer als verwerkt ondanks fout
-            })
-            return False
+            # Probeer oude API als Gen2 niet werkt
+            url = f"http://{device_config['ip']}/relay/0?turn={target_state}"
+            response = requests.get(url, timeout=5)
+            
+            if response.status_code != 200:
+                print(f"Fout bij het schakelen van {device_config['name']}: HTTP {response.status_code}")
+                shellies_ref.child(device_id).update({
+                    "online": False,
+                    "command_processed": True  # Markeer als verwerkt ondanks fout
+                })
+                return False
+            
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        updates = {
+            "state": target_state,
+            "online": True,
+            "command_processed": True,
+            "last_toggled": timestamp
+        }
+        
+        # Als het apparaat wordt ingeschakeld, update de start_time
+        if target_state == "on":
+            updates["start_time"] = timestamp
+        
+        # BELANGRIJK: Wacht kort om te zorgen dat de status daadwerkelijk is gewijzigd
+        time.sleep(1)
+        
+        # Controleer of de status daadwerkelijk is gewijzigd
+        check_status = get_shelly_status(device_config["ip"])
+        if check_status["state"] == target_state:
+            print(f"Status bevestigd: {device_config['name']} is nu {check_status['state']}")
+        else:
+            print(f"WAARSCHUWING: {device_config['name']} heeft niet de verwachte status!")
+        
+        # Update de status in Firebase
+        shellies_ref.child(device_id).update(updates)
+        return True
     except Exception as e:
         print(f"Fout bij het schakelen van {device_config['name']}: {e}")
         shellies_ref.child(device_id).update({
@@ -100,6 +210,57 @@ def control_shelly_device(device_id, device_config, target_state):
             "command_processed": True  # Markeer als verwerkt ondanks fout
         })
         return False
+
+# NIEUW: Aangepaste functie om verbruiksgegevens naar Firebase te sturen
+def update_electrical_data():
+    for device_id, device_config in SHELLY_DEVICES.items():
+        # Haal de status op
+        status = get_shelly_status(device_config["ip"])
+        
+        # Alleen verbruiksgegevens ophalen als het apparaat online is
+        if status["online"]:
+            electrical_data = get_shelly_electrical_data(device_config["ip"])
+            
+            # Update de elektrische gegevens in Firebase
+            power_usage_ref.child(device_id).set(electrical_data)
+            
+            # Voeg ook de laatste gegevens toe aan de shellies node
+            shellies_ref.child(device_id).update({
+                "voltage": electrical_data["voltage"],
+                "current": electrical_data["current"],
+                "calculated_power": electrical_data["calculated_power"],
+                "reported_power": electrical_data["reported_power"],
+                "last_energy_reading": electrical_data["total_energy"],
+                "electrical_updated_at": electrical_data["timestamp"]
+            })
+            
+            # Alleen loggen als het apparaat aan staat en daadwerkelijk verbruik heeft
+            if status["state"] == "on" and electrical_data["valid_data"]:
+                print(f"Elektrische gegevens bijgewerkt voor {device_config['name']}: {electrical_data['calculated_power']} W (berekend), {electrical_data['reported_power']} W (gerapporteerd)")
+        else:
+            # Als het apparaat offline is, markeer dit in Firebase
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            electrical_data = {
+                "voltage": 0,
+                "current": 0,
+                "calculated_power": 0,
+                "reported_power": 0,
+                "timestamp": timestamp,
+                "device_state": "offline",
+                "valid_data": False
+            }
+            power_usage_ref.child(device_id).update(electrical_data)
+            
+            # Update ook de shellies node
+            shellies_ref.child(device_id).update({
+                "voltage": 0,
+                "current": 0,
+                "calculated_power": 0,
+                "reported_power": 0,
+                "electrical_updated_at": timestamp
+            })
+            
+            print(f"Apparaat {device_config['name']} is offline, elektrische gegevens op 0 gezet")
 
 # Functie om een Shelly-apparaat te schakelen op basis van Firebase-data
 def process_shellies_commands():
@@ -113,13 +274,22 @@ def process_shellies_commands():
             current_status = get_shelly_status(device_config["ip"])
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
+            # Haal elektrische gegevens op
+            electrical_data = get_shelly_electrical_data(device_config["ip"])
+            
             initial_data = {
                 "name": device_config["name"],
                 "ip": device_config["ip"],
                 "state": current_status["state"],
                 "online": current_status["online"],
                 "last_toggled": timestamp,
-                "command_processed": True  # BELANGRIJK: Geeft aan dat de status is verwerkt
+                "command_processed": True,  # BELANGRIJK: Geeft aan dat de status is verwerkt
+                "voltage": electrical_data["voltage"],
+                "current": electrical_data["current"],
+                "calculated_power": electrical_data["calculated_power"],
+                "reported_power": electrical_data["reported_power"],
+                "last_energy_reading": electrical_data["total_energy"],
+                "electrical_updated_at": timestamp
             }
             
             if current_status["state"] == "on":
@@ -166,11 +336,10 @@ def process_shellies_commands():
                 # Als het apparaat nu aan is maar dat was het voorheen niet
                 if current_status["state"] == "on" and firebase_data.get("state") != "on":
                     updates["start_time"] = timestamp
-                
-                device_ref.update(updates)
+                    device_ref.update(updates)
                 print(f"Status in Firebase bijgewerkt naar de werkelijke status voor {device_config['name']}")
 
-# NIEUW: Functie voor het verwerken van web commands
+# Functie voor het verwerken van web commands
 def process_web_commands():
     commands = web_commands_ref.get() or {}
     
@@ -198,7 +367,6 @@ def process_web_commands():
                     })
 
 # RFID-handler: Reageer op RFID-scans in Firebase en schakel de juiste Shelly's
-# Modify the handle_rfid_scans function
 def handle_rfid_scans():
     # RFID-kaart ID's
     RFID_ON_ID = "429343509312"  # Kaart om AAN te zetten
@@ -206,6 +374,7 @@ def handle_rfid_scans():
     
     # Store the last processed RFID ID as a global variable
     global last_processed_rfid_id
+    global last_processed_timestamp
     
     try:
         rfid_ref = db.reference("rfid_latest_scan")
@@ -253,21 +422,74 @@ def handle_rfid_scans():
     except Exception as e:
         print(f"Fout bij het verwerken van RFID-scans: {e}")
 
+# NIEUW: Functie om historische elektrische gegevens op te slaan
+def store_historical_electrical_data():
+    try:
+        current_datetime = datetime.datetime.now()
+        date_str = current_datetime.strftime("%Y-%m-%d")
+        hour_str = current_datetime.strftime("%H")
+        
+        # Maak een referentie naar de historische elektrische gegevens
+        history_ref = db.reference(f"electrical_data_history/{date_str}/{hour_str}")
+        
+        # Verzamel elektrische gegevens van alle apparaten
+        for device_id, device_config in SHELLY_DEVICES.items():
+            device_status = get_shelly_status(device_config["ip"])
+            
+            if device_status["online"]:
+                electrical_data = get_shelly_electrical_data(device_config["ip"])
+                
+                # Voeg een timestamp toe aan de gegevens
+                minute_second = current_datetime.strftime("%M:%S")
+                history_ref.child(device_id).child(minute_second).set({
+                    "voltage": electrical_data["voltage"],
+                    "current": electrical_data["current"],
+                    "calculated_power": electrical_data["calculated_power"],
+                    "reported_power": electrical_data["reported_power"],
+                    "total_energy": electrical_data["total_energy"],
+                    "state": device_status["state"]
+                })
+                
+                print(f"Historische elektrische gegevens opgeslagen voor {device_config['name']}")
+    except Exception as e:
+        print(f"Fout bij het opslaan van historische elektrische gegevens: {e}")
+
+# Variabele om bij te houden wanneer we voor het laatst historische gegevens hebben opgeslagen
+last_historical_update = datetime.datetime.now()
+
 # Hoofdlus
 def main():
     print("Shelly monitor gestart. Druk Ctrl+C om te stoppen.")
     print("Dit script zal luisteren naar wijzigingen in Firebase en de Shelly-apparaten aansturen.")
+    print("Toegevoegd: Elektrische gegevens (spanning, stroom en berekend vermogen) worden naar Firebase verzonden.")
+    
+    # Initialiseer de variabele voor het bijhouden van de laatste update van elektrische gegevens
+    last_electrical_update = datetime.datetime.now()
+    
+    # Initialiseer de variabele voor historische updates
+    global last_historical_update
     
     try:
         while True:
             # Controleer en reageer op wijzigingen in shellies node
             process_shellies_commands()
             
-            # NIEUW: Controleer en reageer op wijzigingen in web_commands node
+            # Controleer en reageer op wijzigingen in web_commands node
             process_web_commands()
             
             # Controleer en verwerk RFID-scans
             handle_rfid_scans()
+            
+            # NIEUW: Update elektrische gegevens elke 10 seconden
+            current_time = datetime.datetime.now()
+            if (current_time - last_electrical_update).total_seconds() >= 10:
+                update_electrical_data()
+                last_electrical_update = current_time
+            
+            # NIEUW: Sla historische gegevens op elke 5 minuten
+            if (current_time - last_historical_update).total_seconds() >= 300:  # 5 minuten = 300 seconden
+                store_historical_electrical_data()
+                last_historical_update = current_time
             
             # Wacht voor de volgende check
             time.sleep(3)  # Verhoogd naar 3 seconden om minder polling te doen
