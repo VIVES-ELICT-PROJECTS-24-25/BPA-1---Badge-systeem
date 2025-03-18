@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaakLab Shelly Besturing</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .device-card {
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .online {
+            border-left: 5px solid #28a745;
+        }
+        .offline {
+            border-left: 5px solid #dc3545;
+        }
+        .status-on {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-off {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .status-unknown {
+            color: #6c757d;
+            font-weight: bold;
+        }
+        .runtime {
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">MaakLab Shelly Besturing</h1>
+        
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <button id="refreshBtn" class="btn btn-secondary">
+                    <span id="refreshIcon">🔄</span> Vernieuwen
+                </button>
+            </div>
+        </div>
+        
+        <div id="devices-container" class="row">
+            <!-- Apparaten worden hier dynamisch geladen -->
+            <div class="col-12 text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Laden...</span>
+                </div>
+                <p>Apparaten worden geladen...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast-container voor meldingen -->
+    <div class="toast-container"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Functie om alle apparaten op te halen en weer te geven
+        function loadDevices() {
+            fetch('shelly_controller.php?action=getDevices')
+                .then(response => response.json())
+                .then(devices => {
+                    const container = document.getElementById('devices-container');
+                    container.innerHTML = '';
+                    
+                    Object.keys(devices).forEach(deviceId => {
+                        const device = devices[deviceId];
+                        const onlineClass = device.online ? 'online' : 'offline';
+                        const statusClass = `status-${device.state}`;
+                        
+                        const deviceHtml = `
+                            <div class="col-md-6">
+                                <div class="card device-card ${onlineClass}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${device.name}</h5>
+                                        <p class="card-text">
+                                            <strong>Status:</strong> 
+                                            <span class="${statusClass}">
+                                                ${device.state === 'on' ? 'AAN' : device.state === 'off' ? 'UIT' : 'ONBEKEND'}
+                                            </span>
+                                            ${device.state === 'on' ? 
+                                                `<div class="runtime">Tijd actief: ${device.runtime}</div>` : ''}
+                                        </p>
+                                        <p class="card-text">
+                                            <small class="text-muted">
+                                                IP: ${device.ip}<br>
+                                                Laatst gewijzigd: ${device.last_toggled || 'Nooit'}
+                                            </small>
+                                        </p>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-success toggle-btn" 
+                                                data-device="${deviceId}" data-state="on" 
+                                                ${device.state === 'on' ? 'disabled' : ''}>
+                                                Inschakelen
+                                            </button>
+                                            <button type="button" class="btn btn-danger toggle-btn" 
+                                                data-device="${deviceId}" data-state="off" 
+                                                ${device.state === 'off' ? 'disabled' : ''}>
+                                                Uitschakelen
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        container.innerHTML += deviceHtml;
+                    });
+                    
+                    // Eventlisteners toevoegen aan de nieuw gemaakte knoppen
+                    document.querySelectorAll('.toggle-btn').forEach(button => {
+                        button.addEventListener('click', handleToggleClick);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching devices:', error);
+                    document.getElementById('devices-container').innerHTML = 
+                        `<div class="col-12 alert alert-danger">Fout bij het laden van apparaten: ${error.message}</div>`;
+                });
+        }
+        
+        // Functie om een apparaat te schakelen
+        function handleToggleClick(event) {
+            const button = event.target;
+            button.disabled = true;
+            
+            const deviceId = button.getAttribute('data-device');
+            const state = button.getAttribute('data-state');
+            
+            const formData = new FormData();
+            formData.append('device_id', deviceId);
+            formData.append('state', state);
+            
+            fetch('shelly_controller.php?action=control', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Toon succes en vernieuw na korte vertraging
+                    showToast(result.message, 'success');
+                    setTimeout(loadDevices, 1000);
+                } else {
+                    // Toon foutmelding en schakel knop weer in
+                    showToast(result.message, 'danger');
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Fout bij het schakelen van apparaat', 'danger');
+                button.disabled = false;
+            });
+        }
+        
+        // Bootstrap Toast-melding weergeven
+        function showToast(message, type = 'info') {
+            const toastContainer = document.querySelector('.toast-container');
+            const toastId = 'toast-' + Date.now();
+            
+            const toastHtml = `
+                <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header bg-${type} text-white">
+                        <strong class="me-auto">MaakLab Shelly</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Sluiten"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+            
+            toast.show();
+            
+            toastElement.addEventListener('hidden.bs.toast', function() {
+                toastElement.remove();
+            });
+        }
+        
+        // Eventlistener voor refresh-knop
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            const icon = document.getElementById('refreshIcon');
+            icon.textContent = '⏳';
+            this.disabled = true;
+            
+            fetch('shelly_controller.php?action=refresh')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        loadDevices();
+                    } else {
+                        showToast('Fout bij het vernieuwen van apparaatstatus', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing devices:', error);
+                    showToast('Fout bij het vernieuwen: ' + error.message, 'danger');
+                })
+                .finally(() => {
+                    icon.textContent = '🔄';
+                    document.getElementById('refreshBtn').disabled = false;
+                });
+        });
+        
+        // Pagina laden
+        document.addEventListener('DOMContentLoaded', loadDevices);
+        
+        // Automatisch vernieuwen elke 30 seconden
+        setInterval(loadDevices, 30000);
+    </script>
+</body>
+</html>
