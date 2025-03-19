@@ -26,15 +26,8 @@ switch ($requestMethod) {
             // Haal één reservering op
             getReservatie($reservatieId);
         } else {
-            // Check voor filter op gebruiker of printer
-            if (isset($_GET['user_id'])) {
-                getReservatiesByUser(intval($_GET['user_id']));
-            } elseif (isset($_GET['printer_id'])) {
-                getReservatiesByPrinter(intval($_GET['printer_id']));
-            } else {
-                // Haal alle reserveringen op
-                getAllReservaties();
-            }
+            // Haal alle reserveringen op
+            getAllReservaties();
         }
         break;
     case 'POST':
@@ -66,13 +59,15 @@ switch ($requestMethod) {
 function getAllReservaties() {
     $conn = getConnection();
     
-    // Join met gebruiker en printer om extra informatie te hebben
-    $query = "SELECT r.*, g.Voornaam, g.Naam, p.Naam as Printer_Naam 
+    // Join met gebruiker en printer tabellen om naam en printername te krijgen
+    $query = "SELECT r.*, 
+              CONCAT(g.Voornaam, ' ', g.Naam) AS GebruikerNaam,
+              p.Naam AS PrinterNaam
               FROM Reservatie r
-              JOIN Gebruiker g ON r.User_ID = g.User_ID
-              JOIN Printer p ON r.Printer_ID = p.Printer_ID
+              LEFT JOIN Gebruiker g ON r.User_ID = g.User_ID
+              LEFT JOIN Printer p ON r.Printer_ID = p.Printer_ID
               ORDER BY r.Date_Time_res DESC";
-              
+    
     $result = $conn->query($query);
     
     if ($result->num_rows > 0) {
@@ -88,15 +83,41 @@ function getAllReservaties() {
     $conn->close();
 }
 
+// Functie om recente reserveringen op te halen
+function getRecentReservaties() {
+    $conn = getConnection();
+    $query = "SELECT r.Reservatie_ID, CONCAT(g.Voornaam, ' ', g.Naam) AS GebruikerNaam, 
+              p.Naam AS PrinterNaam, r.Pr_Start, r.Pr_End
+              FROM Reservatie r
+              LEFT JOIN Gebruiker g ON r.User_ID = g.User_ID
+              LEFT JOIN Printer p ON r.Printer_ID = p.Printer_ID
+              ORDER BY r.Date_Time_res DESC
+              LIMIT 10";
+    
+    $result = $conn->query($query);
+    
+    if ($result->num_rows > 0) {
+        $reservaties = [];
+        while ($row = $result->fetch_assoc()) {
+            $reservaties[] = $row;
+        }
+        sendResponse(200, "Recente reserveringen succesvol opgehaald", $reservaties);
+    } else {
+        sendResponse(200, "Geen recente reserveringen gevonden", []);
+    }
+    
+    $conn->close();
+}
+
 // Functie om één reservering op te halen
 function getReservatie($id) {
     $conn = getConnection();
-    
-    // Join met gebruiker en printer om extra informatie te hebben
-    $query = "SELECT r.*, g.Voornaam, g.Naam, p.Naam as Printer_Naam 
+    $query = "SELECT r.*,
+              CONCAT(g.Voornaam, ' ', g.Naam) AS GebruikerNaam,
+              p.Naam AS PrinterNaam
               FROM Reservatie r
-              JOIN Gebruiker g ON r.User_ID = g.User_ID
-              JOIN Printer p ON r.Printer_ID = p.Printer_ID
+              LEFT JOIN Gebruiker g ON r.User_ID = g.User_ID
+              LEFT JOIN Printer p ON r.Printer_ID = p.Printer_ID
               WHERE r.Reservatie_ID = ?";
               
     $stmt = $conn->prepare($query);
@@ -115,89 +136,35 @@ function getReservatie($id) {
     $conn->close();
 }
 
-// Functie om reserveringen van een gebruiker op te halen
-function getReservatiesByUser($userId) {
-    $conn = getConnection();
-    
-    // Join met printer om printernaam te hebben
-    $query = "SELECT r.*, p.Naam as Printer_Naam 
-              FROM Reservatie r
-              JOIN Printer p ON r.Printer_ID = p.Printer_ID
-              WHERE r.User_ID = ?
-              ORDER BY r.Date_Time_res DESC";
-              
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $userId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows > 0) {
-        $reservaties = [];
-        while ($row = $result->fetch_assoc()) {
-            $reservaties[] = $row;
-        }
-        sendResponse(200, "Reserveringen succesvol opgehaald", $reservaties);
-    } else {
-        sendResponse(200, "Geen reserveringen gevonden voor deze gebruiker", []);
-    }
-    
-    $stmt->close();
-    $conn->close();
-}
-
-// Functie om reserveringen voor een printer op te halen
-function getReservatiesByPrinter($printerId) {
-    $conn = getConnection();
-    
-    // Join met gebruiker om gebruikersnaam te hebben
-    $query = "SELECT r.*, g.Voornaam, g.Naam 
-              FROM Reservatie r
-              JOIN Gebruiker g ON r.User_ID = g.User_ID
-              WHERE r.Printer_ID = ?
-              ORDER BY r.Date_Time_res DESC";
-              
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $printerId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows > 0) {
-        $reservaties = [];
-        while ($row = $result->fetch_assoc()) {
-            $reservaties[] = $row;
-        }
-        sendResponse(200, "Reserveringen succesvol opgehaald", $reservaties);
-    } else {
-        sendResponse(200, "Geen reserveringen gevonden voor deze printer", []);
-    }
-    
-    $stmt->close();
-    $conn->close();
-}
-
 // Functie om een nieuwe reservering aan te maken
 function createReservatie() {
     $data = getRequestBody();
     
     // Controleer of alle verplichte velden aanwezig zijn
-    $required = ['User_ID', 'Printer_ID', 'Pr_Start', 'Pr_End'];
+    $required = ['User_ID', 'Printer_ID', 'Pr_Start', 'Pr_End', 'Pin'];
     foreach ($required as $field) {
         if (!isset($data[$field]) || empty($data[$field])) {
             sendResponse(400, "Veld '$field' is verplicht");
         }
     }
     
-    $conn = getConnection();
+    // Valideer PIN (8 cijfers)
+    if (!preg_match('/^[0-9]{8}$/', $data['Pin'])) {
+        sendResponse(400, "PIN moet exact 8 cijfers bevatten");
+    }
     
-    // Controleer of de printer beschikbaar is voor de opgegeven tijdsperiode
-    $checkQuery = "SELECT COUNT(*) as count FROM Reservatie 
-                  WHERE Printer_ID = ? AND 
-                  ((Pr_Start <= ? AND Pr_End >= ?) OR 
-                   (Pr_Start <= ? AND Pr_End >= ?) OR
-                   (Pr_Start >= ? AND Pr_End <= ?))";
-                   
-    $checkStmt = $conn->prepare($checkQuery);
-    $checkStmt->bind_param(
+    $conn = getConnection();
+    $currentDateTime = date('Y-m-d H:i:s');
+    
+    // Controleer of de printer beschikbaar is voor de aangegeven periode
+    $overlappingQuery = "SELECT COUNT(*) AS overlap FROM Reservatie 
+                        WHERE Printer_ID = ? 
+                        AND ((Pr_Start <= ? AND Pr_End >= ?) OR 
+                             (Pr_Start <= ? AND Pr_End >= ?) OR
+                             (Pr_Start >= ? AND Pr_End <= ?))";
+    
+    $overlapStmt = $conn->prepare($overlappingQuery);
+    $overlapStmt->bind_param(
         "issssss", 
         $data['Printer_ID'], 
         $data['Pr_End'], 
@@ -207,39 +174,47 @@ function createReservatie() {
         $data['Pr_Start'], 
         $data['Pr_End']
     );
-    $checkStmt->execute();
-    $result = $checkStmt->get_result();
-    $row = $result->fetch_assoc();
+    $overlapStmt->execute();
+    $overlapResult = $overlapStmt->get_result();
+    $overlapRow = $overlapResult->fetch_assoc();
     
-    if ($row['count'] > 0) {
-        sendResponse(400, "De printer is niet beschikbaar in de opgegeven tijdsperiode");
+    if ($overlapRow['overlap'] > 0) {
+        sendResponse(400, "De printer is niet beschikbaar in de aangegeven periode");
     }
     
-    $checkStmt->close();
-    
-    // Genereer 8-cijferige PIN
-    $pin = sprintf("%08d", mt_rand(0, 99999999));
+    $overlapStmt->close();
     
     // Bereid query voor
-    $query = "INSERT INTO Reservatie (User_ID, Printer_ID, Date_Time_res, Pr_Start, Pr_End, Comment, Pin, Filament_Kleur, Filament_Type) 
-              VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, ?)";
+    $query = "INSERT INTO Reservatie (User_ID, Printer_ID, Date_Time_res, Pr_Start, Pr_End, 
+              Comment, Pin, Filament_Kleur, Filament_Type) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $stmt = $conn->prepare($query);
     $stmt->bind_param(
         "iissssss", 
         $data['User_ID'], 
         $data['Printer_ID'], 
+        $currentDateTime, 
         $data['Pr_Start'], 
         $data['Pr_End'], 
         $data['Comment'] ?? null, 
-        $pin,
+        $data['Pin'], 
         $data['Filament_Kleur'] ?? null, 
         $data['Filament_Type'] ?? null
     );
     
     if ($stmt->execute()) {
         $reservatieId = $stmt->insert_id;
-        sendResponse(201, "Reservering succesvol aangemaakt", ["Reservatie_ID" => $reservatieId, "Pin" => $pin]);
+        
+        // Update de printer status naar Gereserveerd
+        $updatePrinterQuery = "UPDATE Printer SET Status = 'Gereserveerd', 
+                              Laatste_Status_Change = ? WHERE Printer_ID = ?";
+        $updateStmt = $conn->prepare($updatePrinterQuery);
+        $updateStmt->bind_param("si", $currentDateTime, $data['Printer_ID']);
+        $updateStmt->execute();
+        $updateStmt->close();
+        
+        sendResponse(201, "Reservering succesvol aangemaakt", ["Reservatie_ID" => $reservatieId]);
     } else {
         sendResponse(500, "Fout bij aanmaken reservering: " . $stmt->error);
     }
@@ -256,57 +231,69 @@ function updateReservatie($id) {
         sendResponse(400, "Geen data ontvangen om bij te werken");
     }
     
+    // Valideer PIN als deze is ingesteld
+    if (isset($data['Pin']) && !empty($data['Pin'])) {
+        if (!preg_match('/^[0-9]{8}$/', $data['Pin'])) {
+            sendResponse(400, "PIN moet exact 8 cijfers bevatten");
+        }
+    }
+    
     $conn = getConnection();
     
-    // Als Pr_Start of Pr_End worden bijgewerkt, controleer beschikbaarheid
-    if (isset($data['Pr_Start']) || isset($data['Pr_End'])) {
-        // Haal huidige reserveringsgegevens op
-        $currentQuery = "SELECT Printer_ID, Pr_Start, Pr_End FROM Reservatie WHERE Reservatie_ID = ?";
-        $currentStmt = $conn->prepare($currentQuery);
-        $currentStmt->bind_param("i", $id);
-        $currentStmt->execute();
-        $currentResult = $currentStmt->get_result();
+    // Controleer eerst of de reservering bestaat
+    $checkQuery = "SELECT * FROM Reservatie WHERE Reservatie_ID = ?";
+    $checkStmt = $conn->prepare($checkQuery);
+    $checkStmt->bind_param("i", $id);
+    $checkStmt->execute();
+    $checkResult = $checkStmt->get_result();
+    
+    if ($checkResult->num_rows === 0) {
+        $checkStmt->close();
+        $conn->close();
+        sendResponse(404, "Reservering niet gevonden");
+    }
+    
+    $currentReservation = $checkResult->fetch_assoc();
+    $checkStmt->close();
+    
+    // Als Printer_ID, Pr_Start of Pr_End is gewijzigd, controleer beschikbaarheid
+    if ((isset($data['Printer_ID']) && $data['Printer_ID'] != $currentReservation['Printer_ID']) ||
+        (isset($data['Pr_Start']) && $data['Pr_Start'] != $currentReservation['Pr_Start']) ||
+        (isset($data['Pr_End']) && $data['Pr_End'] != $currentReservation['Pr_End'])) {
         
-        if ($currentResult->num_rows === 0) {
-            sendResponse(404, "Reservering niet gevonden");
-        }
+        $printerId = $data['Printer_ID'] ?? $currentReservation['Printer_ID'];
+        $startTime = $data['Pr_Start'] ?? $currentReservation['Pr_Start'];
+        $endTime = $data['Pr_End'] ?? $currentReservation['Pr_End'];
         
-        $current = $currentResult->fetch_assoc();
-        $currentStmt->close();
+        $overlappingQuery = "SELECT COUNT(*) AS overlap FROM Reservatie 
+                            WHERE Printer_ID = ? AND Reservatie_ID != ? AND
+                            ((Pr_Start <= ? AND Pr_End >= ?) OR 
+                             (Pr_Start <= ? AND Pr_End >= ?) OR
+                             (Pr_Start >= ? AND Pr_End <= ?))";
         
-        // Gebruik huidige waarden als fallback
-        $printerId = $data['Printer_ID'] ?? $current['Printer_ID'];
-        $prStart = $data['Pr_Start'] ?? $current['Pr_Start'];
-        $prEnd = $data['Pr_End'] ?? $current['Pr_End'];
-        
-        // Controleer of de printer beschikbaar is voor de opgegeven tijdsperiode
-        $checkQuery = "SELECT COUNT(*) as count FROM Reservatie 
-                      WHERE Printer_ID = ? AND Reservatie_ID != ? AND 
-                      ((Pr_Start <= ? AND Pr_End >= ?) OR 
-                       (Pr_Start <= ? AND Pr_End >= ?) OR
-                       (Pr_Start >= ? AND Pr_End <= ?))";
-                   
-        $checkStmt = $conn->prepare($checkQuery);
-        $checkStmt->bind_param(
+        $overlapStmt = $conn->prepare($overlappingQuery);
+        $overlapStmt->bind_param(
             "iissssss", 
             $printerId, 
             $id,
-            $prEnd, 
-            $prStart,
-            $prStart, 
-            $prStart,
-            $prStart, 
-            $prEnd
+            $endTime, 
+            $startTime,
+            $startTime, 
+            $startTime,
+            $startTime, 
+            $endTime
         );
-        $checkStmt->execute();
-        $result = $checkStmt->get_result();
-        $row = $result->fetch_assoc();
+        $overlapStmt->execute();
+        $overlapResult = $overlapStmt->get_result();
+        $overlapRow = $overlapResult->fetch_assoc();
         
-        if ($row['count'] > 0) {
-            sendResponse(400, "De printer is niet beschikbaar in de opgegeven tijdsperiode");
+        if ($overlapRow['overlap'] > 0) {
+            $overlapStmt->close();
+            $conn->close();
+            sendResponse(400, "De printer is niet beschikbaar in de aangegeven periode");
         }
         
-        $checkStmt->close();
+        $overlapStmt->close();
     }
     
     // Begin query opbouwen
@@ -347,14 +334,35 @@ function updateReservatie($id) {
     // Dynamisch parameters binden
     if (!empty($params)) {
         $bindParams = array_merge([$types], $params);
-        call_user_func_array([$stmt, 'bind_param'], $bindParams);
+        $stmt->bind_param(...$bindParams);
     }
     
     if ($stmt->execute()) {
         if ($stmt->affected_rows > 0) {
+            // Als Printer_ID is veranderd, update printer status
+            if (isset($data['Printer_ID']) && $data['Printer_ID'] != $currentReservation['Printer_ID']) {
+                $currentDateTime = date('Y-m-d H:i:s');
+                
+                // Reset oude printer status naar Beschikbaar
+                $resetOldPrinterQuery = "UPDATE Printer SET Status = 'Beschikbaar', 
+                                     Laatste_Status_Change = ? WHERE Printer_ID = ?";
+                $resetStmt = $conn->prepare($resetOldPrinterQuery);
+                $resetStmt->bind_param("si", $currentDateTime, $currentReservation['Printer_ID']);
+                $resetStmt->execute();
+                $resetStmt->close();
+                
+                // Update nieuwe printer status naar Gereserveerd
+                $updateNewPrinterQuery = "UPDATE Printer SET Status = 'Gereserveerd', 
+                                      Laatste_Status_Change = ? WHERE Printer_ID = ?";
+                $updateStmt = $conn->prepare($updateNewPrinterQuery);
+                $updateStmt->bind_param("si", $currentDateTime, $data['Printer_ID']);
+                $updateStmt->execute();
+                $updateStmt->close();
+            }
+            
             sendResponse(200, "Reservering succesvol bijgewerkt");
         } else {
-            sendResponse(200, "Geen wijzigingen aangebracht of reservering niet gevonden");
+            sendResponse(200, "Geen wijzigingen aangebracht");
         }
     } else {
         sendResponse(500, "Fout bij bijwerken reservering: " . $stmt->error);
@@ -368,26 +376,39 @@ function updateReservatie($id) {
 function deleteReservatie($id) {
     $conn = getConnection();
     
-    // Controleer of de reservering bestaat
-    $checkQuery = "SELECT Reservatie_ID FROM Reservatie WHERE Reservatie_ID = ?";
-    $checkStmt = $conn->prepare($checkQuery);
-    $checkStmt->bind_param("i", $id);
-    $checkStmt->execute();
-    $result = $checkStmt->get_result();
+    // Haal eerst de reservering op om te weten welke printer vrijgemaakt moet worden
+    $getQuery = "SELECT Printer_ID FROM Reservatie WHERE Reservatie_ID = ?";
+    $getStmt = $conn->prepare($getQuery);
+    $getStmt->bind_param("i", $id);
+    $getStmt->execute();
+    $getResult = $getStmt->get_result();
     
-    if ($result->num_rows === 0) {
+    if ($getResult->num_rows === 0) {
+        $getStmt->close();
+        $conn->close();
         sendResponse(404, "Reservering niet gevonden");
     }
     
-    $checkStmt->close();
+    $reservatie = $getResult->fetch_assoc();
+    $printerId = $reservatie['Printer_ID'];
+    $getStmt->close();
     
-    // Bereid query voor om de reservering te verwijderen
+    // Verwijder de reservering
     $query = "DELETE FROM Reservatie WHERE Reservatie_ID = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $id);
     
     if ($stmt->execute()) {
         if ($stmt->affected_rows > 0) {
+            // Update printer status naar Beschikbaar
+            $currentDateTime = date('Y-m-d H:i:s');
+            $updateQuery = "UPDATE Printer SET Status = 'Beschikbaar', 
+                           Laatste_Status_Change = ? WHERE Printer_ID = ?";
+            $updateStmt = $conn->prepare($updateQuery);
+            $updateStmt->bind_param("si", $currentDateTime, $printerId);
+            $updateStmt->execute();
+            $updateStmt->close();
+            
             sendResponse(200, "Reservering succesvol verwijderd");
         } else {
             sendResponse(404, "Reservering niet gevonden");
@@ -398,5 +419,30 @@ function deleteReservatie($id) {
     
     $stmt->close();
     $conn->close();
+}
+
+// Als endpoint voor dashboard statistieken wordt aangeroepen
+if (isset($_GET['action']) && $_GET['action'] === 'recent') {
+    getRecentReservaties();
+    exit;
+}
+
+// Als endpoint voor actieve reserveringen wordt aangeroepen
+if (isset($_GET['action']) && $_GET['action'] === 'active') {
+    $conn = getConnection();
+    $now = date('Y-m-d H:i:s');
+    
+    $query = "SELECT COUNT(*) as count FROM Reservatie WHERE Pr_Start <= ? AND Pr_End >= ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ss", $now, $now);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    
+    sendResponse(200, "Actieve reserveringen geteld", ["count" => $row['count']]);
+    
+    $stmt->close();
+    $conn->close();
+    exit;
 }
 ?>

@@ -1,6 +1,11 @@
 <?php
-// Start the session
 session_start();
+
+// Controleer of de gebruiker ingelogd is
+// if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+//     header("Location: login.php");
+//     exit;
+// }
 
 // Base URL for API calls
 $apiBaseUrl = ""; // Modify this based on your setup if needed
