@@ -1,4 +1,29 @@
-<!DOCTYPE html>
+<?php
+session_start();
+
+// Controleer of de gebruiker al ingelogd is
+if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
+    header("Location: admin.php");
+    exit;
+}
+
+// Verwerk de login
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    // Hardcoded login gegevens
+    if ($username === 'admin' && $password === 'admin') {
+        $_SESSION['loggedin'] = true;
+        $_SESSION['username'] = $username;
+        header("Location: admin.php"); // Stuur door naar adminpagina
+        exit;
+    } else {
+        $error = "Ongeldige gebruikersnaam of wachtwoord.";
+    }
+}
+?>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,24 +37,22 @@
 
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-            
+       
     <script src="Scripts/auth.js"></script>
+    <script src="Scripts/inlog.js"></script>
 </head>
 <body>
     <div class="login-container">
         <h2>Login</h2>
         <form id="loginForm">
             <label for="username">Gebruikersnaam:</label>
-            <input type="text" id="username" name="username" required>
+            <input type="text" id="username" required>
             
             <label for="password">Wachtwoord:</label>
-            <input type="password" id="password" name="password" required>
+            <input type="password" id="password" required>
             
             <button type="submit">Inloggen</button>
         </form>
-        <p class="login-link">
-            Nog geen account? <a href="registreer.php">Registreer hier</a>
-        </p>
     </div>
 </body>
 </html>

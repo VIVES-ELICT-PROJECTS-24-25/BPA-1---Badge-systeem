@@ -1,0 +1,135 @@
+/* Algemene stijlen voor printer-kaarten */
+.printer-card {
+    margin-bottom: 25px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: #fff;
+    border: 1px solid #eaeaea;
+    display: flex;
+    flex-direction: column;
+}
+
+.printer-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Stijlen voor de printer-naam */
+.printer-name {
+    padding: 15px 20px;
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    background-color: #f8f8f8;
+}
+
+/* Stijlen voor de printer-status header */
+.printer-header {
+    padding: 10px 15px;
+    color: white;
+    font-weight: 500;
+    font-size: 1rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Stijlen voor de printer-body */
+.printer-body {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.printer-info {
+    line-height: 1.5;
+    color: #555;
+    overflow-y: auto; /* Voegt een scrollbar toe indien nodig */
+    max-height: 120px; /* Maximum hoogte voor de info-sectie */
+}
+
+.printer-info p {
+    margin: 0;
+}
+
+/* Aangepaste scrollbar stijlen voor betere gebruikerservaring */
+.printer-info::-webkit-scrollbar {
+    width: 6px;
+}
+
+.printer-info::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.printer-info::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.printer-info::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Optionele indicator voor overlopende tekst */
+.printer-info.has-overflow::after {
+    content: '...';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0 10px;
+    background-color: white;
+}
+
+/* Container stijlen */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 15px;
+}
+
+.container h1 {
+    margin-bottom: 30px;
+    color: #333;
+    font-size: 1.8rem;
+    text-align: center;
+}
+
+/* Vaste hoogte voor de printer kaarten voor consistentie */
+@media (min-width: 768px) {
+    .container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .container h1 {
+        grid-column: 1 / -1;
+    }
+    
+    .printer-card {
+        margin-bottom: 0;
+        height: 250px; /* Vaste hoogte voor consistentie */
+    }
+}
+
+@media (min-width: 1024px) {
+    .container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Stijl voor foutmelding */
+.error {
+    padding: 15px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    grid-column: 1 / -1;
+}

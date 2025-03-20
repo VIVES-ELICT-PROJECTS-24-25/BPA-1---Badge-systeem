@@ -1,0 +1,221 @@
+/* Calendar-specific styles - Assumes mystyle.css is loaded first */
+
+/* Form Container */
+.form-container {
+    background: white;
+    padding: 24px;
+    border-radius: var(--borderRadius);
+    box-shadow: var(--boxShadow);
+    margin-bottom: 32px;
+    display: grid;
+    gap: 16px;
+    align-items: center;
+}
+
+.form-container label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--vivesDark);
+}
+
+.form-container select,
+.form-container input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+
+.form-container select:focus,
+.form-container input:focus {
+    border-color: var(--vivesBlue);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Custom fields */
+#customFilament, #customColor {
+    display: none; /* Hidden by default */
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 100%;
+}
+
+/* Rooms Column */
+.rooms {
+    background: #f9fafb;
+    border-right: 1px solid #e5e7eb;
+}
+
+.rooms div {
+    padding: 16px;
+    font-weight: 500;
+    color: var(--vivesDark);
+    border-bottom: 1px solid #e5e7eb;
+    height: 60px;
+    display: flex;
+    align-items: center;
+}
+
+/* Timeline Grid */
+.timeline {
+    overflow-x: auto;
+    position: relative;
+}
+
+/* Timeline Container */
+.timeline-container {
+    background: white;
+    border-radius: var(--borderRadius);
+    box-shadow: var(--boxShadow);
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    overflow-x: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.timeline-row {
+    display: grid;
+    grid-template-columns: repeat(13, 1fr); /* 13 columns for 13 hour slots */
+    height: 60px;
+    border-bottom: 1px solid #e5e7eb;
+    position: relative;
+}
+
+.time-slot {
+    border-right: 1px solid #e5e7eb;
+    text-align: center;
+    font-size: 14px;
+    color: var(--vivesGray);
+    width: 100%;
+    box-sizing: border-box;
+    padding: 20px;
+}
+
+/* Events */
+.event {
+    position: absolute;
+    top: 8px;
+    height: 44px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    box-shadow: var(--boxShadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 1;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Event title */
+.event-title {
+    display: block;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 100%;
+    text-align: center;
+}
+
+/* Tooltip using ::before pseudo-element */
+.event::before {
+    content: attr(data-start-time) " - " attr(data-end-time);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 5px;
+    background-color: var(--vivesDark);
+    color: white;
+    text-align: center;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.event::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent var(--vivesDark) transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    pointer-events: none;
+}
+
+/* Show tooltip on hover */
+.event:hover::before,
+.event:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Event Colors - Using variables from mystyle.css */
+.blue {
+    background-color: #60a5fa;
+    border: 1px solid var(--vivesBlue);
+    color: white;
+}
+
+.green {
+    background-color: #34d399;
+    border: 1px solid var(--vivesGreen);
+    color: white;
+}
+
+.orange {
+    background-color: #fb923c;
+    border: 1px solid var(--vivesOrange);
+    color: white;
+}
+
+.red {
+    background-color: var(--vivesRedLight);
+    border: 1px solid var(--vivesRed);
+    color: white;
+}
+
+/* Responsive Design for Calendar */
+@media (max-width: 768px) {
+    .form-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .timeline-container {
+        grid-template-columns: 120px 1fr;
+    }
+    
+    .rooms div {
+        padding: 12px;
+        font-size: 14px;
+    }
+}

@@ -1,40 +1,31 @@
-<?php
-session_start();
-
-// Controleer of de gebruiker is ingelogd
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
-    // Gebruiker is niet ingelogd, redirect naar de inlogpagina
-    header('Location: index.php'); // Vervang door de juiste inlogpagina
-    exit;
-}
-
-// Als de gebruiker is ingelogd, kan de rest van de pagina worden weergegeven
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="Styles/mystyle.css">
     <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../Styles/mystyle.css">
+    <script src="../Scripts/auth.js"></script>
+    <script src="../Scripts/navigation.js"></script>
+    <script src="../Scripts/kalender.js"></script>
 
-    
-<script src="Scripts/navigation.js"></script>
-    <title>Printers</title>
+    <title>Mijn kalender</title>
 </head>
-<body>
+<body>   
     <nav class="navbar">
         <div class="nav-container">
-            <a href="index.php" class="nav-logo">
-                <img src="images/vives smile.svg" alt="Vives Logo" />
+            <a href="index.html" class="nav-logo">
+                <img src="../images/vives smile.svg" alt="Vives Logo" />
             </a>
             
             <button class="nav-toggle" aria-label="Open menu">
                 <span class="hamburger"></span>
             </button>
 
+        
+                    </a>
+                </li>
             <ul class="nav-menu">
                 <li class="nav-item">
                     <a href="reservatie.php" class="nav-link">
@@ -57,7 +48,6 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                         Mijn reservaties
                     </a>
                 </li>
-                <li class="nav-item">
                     <a href="printers.php" class="nav-link">
                         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M6 9V2h12v7"/>
@@ -81,40 +71,10 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         </div>
     </nav>
 
-    <script>
-        document.querySelector('.nav-toggle').addEventListener('click', function() {
-            document.querySelector('.nav-menu').classList.toggle('active');
-            this.classList.toggle('active');
-        });
-    </script>
-    <section class="photo-info">
-        <div class="photo-item">
-            <img src="images/Creality3D_Creality_3D_Ender_3_V3_SE_3D_printer_DKI00192_m1_big.jpg" alt="Printer 1">
-            <div class="photo-text">
-                <h2>Printer 1 (3DP 01) </h2>
-                <p>Dit is een ender3 V3 dat werkt met Cura </p>
-            </div>
-        </div>
-        <div class="photo-item">
-            <img src="images/ENDER3_V2.jpg" alt="Printer 2">
-            <div class="photo-text">
-                <h2>Printer 2 (3DP 02)</h2>
-                <p>Dit is een ender3 V2 met een bowden drive dat werkt met Cura </p>
-            </div>
-        </div>
-        <div class="photo-item reverse">
-            <div class="photo-text">
-                <h2>Printer 3 (3DP 03)</h2>
-                <p>Dit is een Ender3 pro Dat werkt met Cura</p>
-            </div>
-            <img src="images/ender-3-pro_2.jpg" alt="Printer 2">
-        </div>
-        
-        
-    </section>
-    
+    <div>
+        pagina om reservaties te bekijken
+    </div>
 
-
-
+    <script src="../Scripts/algemene.js"></script>
 </body>
 </html>
