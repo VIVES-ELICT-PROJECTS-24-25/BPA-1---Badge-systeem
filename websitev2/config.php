@@ -18,7 +18,7 @@ try {
 
 // Helper functions
 function isLoggedIn() {
-    return isset($_SESSION['user_id']);
+    return isset($_SESSION['User_ID']);
 }
 
 function isAdmin() {

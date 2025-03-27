@@ -101,9 +101,6 @@ include 'includes/header.php';
                         <img src="assets/img/printer-<?php echo $printer['Printer_ID']; ?>.jpg" class="card-img-top" alt="<?php echo htmlspecialchars($printer['Versie_Toestel']); ?>" onerror="this.src='assets/img/printer-default.jpg'">
                         <div class="card-body">
                             <h5 class="card-title"><?php echo htmlspecialchars($printer['Versie_Toestel']); ?></h5>
-                            <p class="card-text">
-                                <small class="text-muted">Netwerk: <?php echo htmlspecialchars($printer['netwerkadres'] ?? 'Niet gespecificeerd'); ?></small>
-                            </p>
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="badge bg-<?php 
                                     if ($printer['Status'] === 'beschikbaar') echo 'success';

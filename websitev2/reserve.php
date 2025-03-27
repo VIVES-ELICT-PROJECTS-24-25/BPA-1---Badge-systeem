@@ -148,6 +148,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include 'includes/header.php';
 ?>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('date');
+    const startTimeInput = document.getElementById('start_time');
+    
+    // Function to disable past hours on the current day
+    function updateAvailableTimes() {
+        const selectedDate = new Date(dateInput.value);
+        const today = new Date();
+        
+        // Reset all options to enabled
+        Array.from(startTimeInput.options).forEach(option => {
+            option.disabled = false;
+        });
+        
+        // If selected date is today, disable past hours
+        if (selectedDate.toDateString() === today.toDateString()) {
+            const currentHour = today.getHours();
+            
+            Array.from(startTimeInput.options).forEach(option => {
+                const optionHour = parseInt(option.value.split(':')[0]);
+                if (optionHour <= currentHour) {
+                    option.disabled = true;
+                }
+            });
+        }
+    }
+    
+    // Update times when date changes
+    dateInput.addEventListener('change', updateAvailableTimes);
+    
+    // Initial update
+    updateAvailableTimes();
+});
+</script>
+
 <div class="container">
     <div class="row">
         <div class="col-lg-8">
@@ -247,7 +283,6 @@ include 'includes/header.php';
                     <p class="card-text">
                         <strong>Software:</strong> <?php echo htmlspecialchars($printer['Software'] ?? 'Niet gespecificeerd'); ?><br>
                         <strong>Datadrager:</strong> <?php echo htmlspecialchars($printer['Datadrager'] ?? 'Niet gespecificeerd'); ?><br>
-                        <strong>Netwerkadres:</strong> <?php echo htmlspecialchars($printer['netwerkadres'] ?? 'Niet gespecificeerd'); ?>
                     </p>
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>

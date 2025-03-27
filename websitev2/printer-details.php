@@ -35,7 +35,6 @@ try {
         FROM Reservatie r
         JOIN User u ON r.User_ID = u.User_ID
         WHERE r.Printer_ID = ? 
-          AND r.Status NOT IN ('voltooid', 'geannuleerd')
           AND r.PRINT_END > NOW()
         ORDER BY r.PRINT_START
         LIMIT 5
@@ -44,7 +43,7 @@ try {
     $reservations = $stmt->fetchAll();
     
     // Haal beschikbare filamenten op
-    $stmt = $conn->query("SELECT * FROM Filament WHERE Beschikbaar = 1 ORDER BY Type, Kleur");
+    $stmt = $conn->query("SELECT * FROM Filament ORDER BY Type, Kleur");
     $filaments = $stmt->fetchAll();
     
 } catch (PDOException $e) {

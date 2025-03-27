@@ -77,13 +77,11 @@ include 'includes/header.php';
                     <div class="card printer-card">
                         <div class="position-relative">
                             <img src="assets/img/printer-<?php echo $printer['id']; ?>.jpg" alt="<?php echo htmlspecialchars($printer['name']); ?>" class="card-img-top" onerror="this.src='assets/img/printer-default.jpg'">
-                            <span class="printer-status status-available">Beschikbaar</span>
                         </div>
                         <div class="card-body">
                             <h5 class="card-title"><?php echo htmlspecialchars($printer['name']); ?></h5>
                             <p class="card-text">
-                                <strong>Model:</strong> <?php echo htmlspecialchars($printer['model']); ?><br>
-                                <strong>Kleur:</strong> <?php echo $printer['color_capability'] ? 'Ja' : 'Nee'; ?>
+                                <strong>Model:</strong> <?php echo htmlspecialchars($printer['Versie_Toestel']); ?>
                             </p>
                             <a href="printer-details.php?id=<?php echo $printer['id']; ?>" class="btn btn-primary">Bekijk Details</a>
                         </div>

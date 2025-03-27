@@ -159,7 +159,7 @@ include 'includes/header.php';
                         
                         <div class="mb-3">
                             <label for="email" class="form-label">E-mailadres</label>
-                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['Emailadres']); ?>" required>
+                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['Emailadres']); ?>" disabled>
                         </div>
                         
                         <div class="mb-3">

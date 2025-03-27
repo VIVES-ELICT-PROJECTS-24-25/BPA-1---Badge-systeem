@@ -10,30 +10,39 @@ $pageTitle = 'Contact - 3D Printer Reserveringssysteem';
 $success = '';
 $error = '';
 
-// Process contact form
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = sanitizeInput($_POST['name']);
-    $email = sanitizeInput($_POST['email']);
-    $subject = sanitizeInput($_POST['subject']);
-    $message = sanitizeInput($_POST['message']);
+// Add this at the top of contact.php
+if (isset($_POST['submit_contact'])) {
+    $name = $_POST['name'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $subject = $_POST['subject'] ?? '';
+    $message = $_POST['message'] ?? '';
     
-    // Basic validation
+    // Validate inputs
     if (empty($name) || empty($email) || empty($subject) || empty($message)) {
-        $error = 'Alle velden zijn verplicht.';
+        $error = "Alle velden zijn verplicht.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Voer een geldig e-mailadres in.';
+        $error = "Vul een geldig e-mailadres in.";
     } else {
-        // Insert into database
-        $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)");
-        $result = $stmt->execute([$name, $email, $subject, $message]);
+        // Email headers
+        $headers = "From: " . $email . "\r\n";
+        $headers .= "Reply-To: " . $email . "\r\n";
+        $headers .= "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
         
-        if ($result) {
-            $success = 'Bedankt voor je bericht! We nemen zo snel mogelijk contact met je op.';
-            
-            // Optional: Send email notification to admin
-            // mail('admin@example.com', 'Nieuw contactformulier inzending', "Naam: $name\nEmail: $email\nOnderwerp: $subject\nBericht: $message");
+        // Email content
+        $mail_content = "<p><strong>Naam:</strong> " . htmlspecialchars($name) . "</p>";
+        $mail_content .= "<p><strong>E-mail:</strong> " . htmlspecialchars($email) . "</p>";
+        $mail_content .= "<p><strong>Bericht:</strong></p>";
+        $mail_content .= "<p>" . nl2br(htmlspecialchars($message)) . "</p>";
+        
+        // Recipient email (change this to the actual contact email)
+        $to = "larsvandekerkhove@gmail.com";
+        
+        // Send the email
+        if (mail($to, "Contact formulier: " . $subject, $mail_content, $headers)) {
+            $success = "Je bericht is verzonden. Wij nemen zo snel mogelijk contact met je op.";
         } else {
-            $error = 'Er is een fout opgetreden bij het verzenden van je bericht. Probeer het later opnieuw.';
+            $error = "Er is een probleem opgetreden bij het verzenden van je bericht. Probeer het later opnieuw.";
         }
     }
 }
@@ -95,10 +104,10 @@ include 'includes/header.php';
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title">Contactgegevens</h5>
-                    <p><i class="fas fa-map-marker-alt me-2"></i> Schoolstraat 1, 1000 Brussel</p>
+                    <p><i class="fas fa-map-marker-alt me-2"></i> Universiteitslaan 2, 8500 Kortrijk</p>
                     <p><i class="fas fa-phone me-2"></i> +32 2 123 45 67</p>
-                    <p><i class="fas fa-envelope me-2"></i> info@printreservation.be</p>
-                    <p><i class="fas fa-clock me-2"></i> Maandag - Vrijdag: 9:00 - 17:00</p>
+                    <p><i class="fas fa-envelope me-2"></i> info@3dprintersmaaklabvives.be</p>
+                    <p><i class="fas fa-clock me-2"></i> Donderdag: 14:00 - 18:00</p>
                 </div>
             </div>
             
@@ -106,7 +115,7 @@ include 'includes/header.php';
                 <div class="card-body">
                     <h5 class="card-title">Locatie</h5>
                     <div class="ratio ratio-16x9">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2519.202631192928!2d4.3517765!3d50.8465573!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c3c37d924ad855%3A0x2a02d9b541702d06!2sBrussel!5e0!3m2!1snl!2sbe!4v1616418408725!5m2!1snl!2sbe" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                        <iframe width="100%" height="600" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?width=100%25&amp;height=600&amp;hl=en&amp;q=Universiteitslaan%202,%208500%20Kortrijk+(Maaklab%20Vives)&amp;t=&amp;z=15&amp;ie=UTF8&amp;iwloc=B&amp;output=embed"><a href="https://www.gps.ie/collections/drones/">gps drone</a></iframe>
                     </div>
                 </div>
             </div>
