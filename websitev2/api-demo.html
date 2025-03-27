@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .endpoint {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>3D Printer Reserverings-API Test</h1>
+    
+    <div class="endpoint">
+        <h3>Alle Printers Ophalen</h3>
+        <button onclick="testAPI('printers.php?route=all', 'printersResult')">Test</button>
+        <pre id="printersResult">Resultaat verschijnt hier...</pre>
+    </div>
+    
+    <div class="endpoint">
+        <h3>Alle Gebruikers Ophalen</h3>
+        <button onclick="testAPI('users.php?route=all', 'usersResult')">Test</button>
+        <pre id="usersResult">Resultaat verschijnt hier...</pre>
+    </div>
+    
+    <div class="endpoint">
+        <h3>Alle Filamenten Ophalen</h3>
+        <button onclick="testAPI('filaments.php?route=all', 'filamentsResult')">Test</button>
+        <pre id="filamentsResult">Resultaat verschijnt hier...</pre>
+    </div>
+
+    <script>
+        function testAPI(endpoint, resultId) {
+            const resultElement = document.getElementById(resultId);
+            resultElement.textContent = "Bezig met laden...";
+            
+            fetch(`api/${endpoint}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    resultElement.textContent = `Fout: ${error.message}`;
+                });
+        }
+    </script>
+</body>
+</html>
