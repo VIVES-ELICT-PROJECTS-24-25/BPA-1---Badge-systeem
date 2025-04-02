@@ -195,6 +195,22 @@ function showScanPage() {
     }, SCAN_TIMEOUT);
 }
 
+function showCodePage() {
+    document.getElementById('welcomePage').classList.add('hidden');
+    document.getElementById('scanPage').classList.add('hidden');
+    document.getElementById('codePage').classList.remove('hidden');
+    document.getElementById('reservationsPage').classList.add('hidden');
+    
+    // Reset code
+    currentCode = '';
+    updateCodeDisplay();
+    
+    // Check database connection
+    if (!connectionStatus.database) {
+        document.getElementById('codeStatus').textContent = 'Geen verbinding met de database. Kan code niet verifiëren.';
+    }
+}
+
 function showReservationsPage(user) {
     // Hide all containers
     hideAllContainers();
