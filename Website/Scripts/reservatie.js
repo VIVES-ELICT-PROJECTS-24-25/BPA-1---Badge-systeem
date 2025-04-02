@@ -1,15 +1,15 @@
-/**
- * Reservation System JavaScript
- * Handles form interactions, timeline display, and API calls
- */
+
 
 // Global variables
 let selectedDate = new Date();
 let availablePrinters = [];
 let timeslots = [];
 let reservations = {};
+// Only declare events if it doesn't already exist
+if (typeof window.events === 'undefined') {
+    window.events = [];
+}
 
-// Initialize the page
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
     // Set today's date as default
@@ -69,25 +69,82 @@ document.addEventListener('DOMContentLoaded', function() {
     updateTimeSlots();
 });
 
-// Load printers from PHP (passed via initialPrinters variable)
-async function loadPrinters() {
-    try {
-        // Check if initialPrinters is defined
-        if (typeof initialPrinters !== 'undefined') {
-            availablePrinters = initialPrinters;
-        } else {
-            console.warn("initialPrinters not defined, using empty array");
-            availablePrinters = [];
-        }
-        
-        // After loading printers, load their reservations
-        await loadAllPrinterReservations();
-        
-        // Initialize timeline
-        updateTimeline();
-    } catch (error) {
-        console.error("Error in loadPrinters:", error);
-    }
+// Load printers from the API endpoint
+// Load printers from the API endpoint
+function loadPrinters() {
+    // Clear existing printers
+    availablePrinters = [];
+    events = [];
+    
+    // Log the API endpoint being used
+    console.log("Fetching printers from: /api/printer_api.php");
+    
+    // Fetch printers from the API
+    fetch('./api/printer_api.php')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 200) {
+                // Store printers data
+                availablePrinters = data.data;
+                
+                // Populate printer dropdown in the form
+                const printerSelect = document.getElementById('printer');
+                if (printerSelect) {
+                    printerSelect.innerHTML = '<option value="">Selecteer printer</option>';
+                    
+                    // Only show available printers for reservation
+                    data.data.filter(printer => printer.Status === 'Beschikbaar')
+                        .forEach(printer => {
+                            printerSelect.innerHTML += `<option value="${printer.Printer_ID}">${printer.Naam}</option>`;
+                        });
+                }
+                
+                // Add printer rows to the timeline
+                const timelineContainer = document.querySelector('.timeline');
+                if (timelineContainer) {
+                    // Clear existing printer rows except the time header
+                    const existingRows = timelineContainer.querySelectorAll('.timeline-row:not(#timeHeader)');
+                    existingRows.forEach(row => row.remove());
+                    
+                    // Add a row for each printer
+                    availablePrinters.forEach(printer => {
+                        const printerRow = document.createElement('div');
+                        printerRow.className = 'timeline-row';
+                        printerRow.id = `printer${printer.Printer_ID}`;
+                        printerRow.setAttribute('data-printer-id', printer.Printer_ID);
+                        timelineContainer.appendChild(printerRow);
+                    });
+                }
+                
+                // After loading printers, load their reservations
+                loadAllPrinterReservations().then(() => {
+                    // Update the timeline with reservations
+                    updateTimeline();
+                });
+            } else {
+                console.error('Error fetching printers:', data.message);
+                // Use initialPrinters if available
+                if (typeof initialPrinters !== 'undefined' && initialPrinters.length > 0) {
+                    console.log("Using initial printers data");
+                    availablePrinters = initialPrinters;
+                    updateTimeline();
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching printers:', error);
+            // Use initialPrinters if available
+            if (typeof initialPrinters !== 'undefined' && initialPrinters.length > 0) {
+                console.log("Using initial printers data due to fetch error");
+                availablePrinters = initialPrinters;
+                updateTimeline();
+            }
+        });
 }
 
 // Load reservations for all available printers
@@ -96,10 +153,10 @@ async function loadAllPrinterReservations() {
     
     for (const printer of availablePrinters) {
         try {
-            const response = await fetch(`reservatie_api.php?printer_id=${printer.Printer_ID}`);
+            const response = await fetch(`/api/reservatie_api.php?printer_id=${printer.Printer_ID}`);
             const data = await response.json();
             
-            if (data.status === 'success') {
+            if (data.status === 'success' || data.status === 200) {
                 reservations[printer.Printer_ID] = data.data;
                 
                 // Convert to events format for compatibility with existing code
@@ -147,12 +204,12 @@ function populateTimeDropdown() {
     const timeSelect = document.getElementById('startTime');
     timeSelect.innerHTML = ''; // Clear existing options
     
-    const startHour = 6; // 6 AM
-    const endHour = 18; // 6 PM
+    const startHour = 8; // 8 AM
+    const endHour = 17; // 5 PM
     
     timeslots = [];
     for (let hour = startHour; hour < endHour; hour++) {
-        for (let minute = 0; minute < 60; minute += 15) {
+        for (let minute = 0; minute < 60; minute += 30) {
             const value = hour + minute/60; // Store as decimal for calculations
             const displayHour = hour > 12 ? hour - 12 : hour;
             const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -202,19 +259,42 @@ function clearTimeline() {
     });
 }
 
-// Create time headers (6:00 AM - 6:00 PM)
+// Create time headers (8:00 AM - 5:00 PM)
 function createTimeHeaders() {
-    const timeRow = document.getElementById('timeHeader');
+    let timeRow = document.getElementById('timeHeader');
+    
+    // If timeHeader doesn't exist, create it
+    if (!timeRow) {
+        console.warn("timeHeader element not found, creating one");
+        const timelineContainer = document.querySelector('.timeline');
+        if (timelineContainer) {
+            timeRow = document.createElement('div');
+            timeRow.id = 'timeHeader';
+            timeRow.className = 'timeline-row';
+            
+            // Insert as first child
+            if (timelineContainer.firstChild) {
+                timelineContainer.insertBefore(timeRow, timelineContainer.firstChild);
+            } else {
+                timelineContainer.appendChild(timeRow);
+            }
+        } else {
+            console.error("Timeline container not found");
+            return;
+        }
+    }
+    
     timeRow.innerHTML = ''; // Clear existing
     
-    // Add time slots from 6AM to 6PM
-    for (let hour = 6; hour <= 18; hour++) {
+    // Add time slots from 8AM to 5PM (10 columns for 9 hours)
+    for (let hour = 8; hour <= 17; hour++) {
         const timeSlot = document.createElement('div');
         timeSlot.className = 'time-block';
         timeSlot.textContent = hour <= 12 ? `${hour}AM` : `${hour-12}PM`;
         timeRow.appendChild(timeSlot);
     }
 }
+
 // Render events for a specific date
 function renderEvents(date) {
     // Filter events for the selected date
@@ -249,11 +329,11 @@ function renderEvent(printerId, title, startHour, endHour, color, opo, filamentT
     let eventDiv = document.createElement("div");
     eventDiv.className = "reservation-block";
     
-    // Calculate the total hours displayed (6AM to 6PM = 12 hours)
-    const totalHours = 12;
+    // Calculate the total hours displayed (8AM to 5PM = 9 hours)
+    const totalHours = 9;
     
     // Calculate position and width as percentages
-    const startPercent = ((startHour - 6) / totalHours) * 100;
+    const startPercent = ((startHour - 8) / totalHours) * 100;
     const widthPercent = ((endHour - startHour) / totalHours) * 100;
     
     // Apply positioning using percentages
@@ -349,7 +429,7 @@ function updateAvailableDurations() {
     ).sort((a, b) => a.start - b.start);
     
     // Calculate max duration (in hours)
-    let maxDuration = 12; // Default max
+    let maxDuration = 9; // Default max (8AM to 5PM)
     
     if (relevantEvents.length > 0) {
         // Get the next reservation
@@ -368,8 +448,8 @@ function updateAvailableDurations() {
     
     const maxPrintDuration = (maxDuration - setupDuration) / (1 + cooldownFactor);
     
-    // Round down to nearest 0.25
-    const roundedMaxDuration = Math.floor(maxPrintDuration * 4) / 4;
+    // Round down to nearest 0.5 (30 minutes)
+    const roundedMaxDuration = Math.floor(maxPrintDuration * 2) / 2;
     
     // Update the duration input
     durationInput.max = roundedMaxDuration;
@@ -385,9 +465,14 @@ function validateDuration() {
     const durationInput = document.getElementById('printDuration');
     const value = parseFloat(durationInput.value);
     
-    if (value < 0.25) {
-        durationInput.value = 0.25;
-    } else if (value > parseFloat(durationInput.max)) {
+    if (value < 0.5) {
+        durationInput.value = 0.5; // Minimum 30 minutes
+    } else {
+        // Round to nearest half hour
+        durationInput.value = Math.round(value * 2) / 2;
+    }
+    
+    if (value > parseFloat(durationInput.max)) {
         durationInput.value = durationInput.max;
     }
 }
@@ -477,12 +562,16 @@ async function submitReservation() {
         return;
     }
     
+    // Set up variables for timing calculations
+    const setupDuration = 0.25; // 15 minutes for setup
+    const cooldownDuration = durationHours * 0.1; // 10% of print time for cooldown
+    
     // Calculate actual start and end times
     let actualStartTime, endTime;
     
-    // Special handling for 6:00 AM start time
-    if (startTimeVal === 6) {
-        // For 6:00 AM, we start exactly at 6:00 (no setup time before)
+    // Special handling for 8:00 AM start time
+    if (startTimeVal === 8) {
+        // For 8:00 AM, we start exactly at 8:00 (no setup time before)
         actualStartTime = startTimeVal;
         // Add setup time to the total duration instead
         endTime = startTimeVal + setupDuration + durationHours + cooldownDuration;
@@ -523,7 +612,7 @@ async function submitReservation() {
     
     try {
         // Send the data to the API
-        const response = await fetch('reservatie_api.php', {
+        const response = await fetch('/api/reservatie_api.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -559,9 +648,8 @@ async function submitReservation() {
             document.getElementById('filamentColor').selectedIndex = 0;
             document.getElementById('filamentWeight').value = '';
             
-            // Reload reservations and update the timeline
-            await loadAllPrinterReservations();
-            updateTimeline();
+            // Reload printers and reservations 
+            loadPrinters(); // This will also reload reservations
         } else {
             showMessage(`Fout bij het aanmaken van de reservering: ${result.message}`, "error");
         }
@@ -586,6 +674,15 @@ function formatDateTimeForMySQL(date) {
 // Show message to the user
 function showMessage(message, type = "info") {
     const messageContainer = document.getElementById('messageContainer');
+    
+    if (!messageContainer) {
+        // Create message container if it doesn't exist
+        const newContainer = document.createElement('div');
+        newContainer.id = 'messageContainer';
+        document.querySelector('.container').prepend(newContainer);
+        showMessage(message, type); // Try again with the new container
+        return;
+    }
     
     const messageElement = document.createElement('div');
     messageElement.textContent = message;

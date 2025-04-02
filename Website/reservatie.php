@@ -45,6 +45,15 @@ function callAPI($method, $endpoint, $data = null) {
 $printers = callAPI('GET', '/api/printer_api.php', null);
 $reservations = callAPI('GET', '/api/reservatie_api.php', null);
 
+// Include external printer API
+require_once 'api/external_printer_api.php';
+
+// Get external printer data
+$externalPrinters = [];
+$externalResult = getPrinterData($api_url);
+if ($externalResult['success'] && $externalResult['is_json'] && isset($externalResult['data']['data'])) {
+    $externalPrinters = $externalResult['data']['data'];
+}
 
 ?>
 
@@ -111,22 +120,20 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
         <div class="form-container">
             <!-- Stap 1: Basisgegevens -->
             <div id="step1Container" class="form-step">
-                <div class="input-field">
-                    <label for="printer">Printer:</label>
-                    <select id="printer">
-                        <?php if (isset($printers['data']['data']) && is_array($printers['data']['data'])): ?>
-                            <?php foreach ($printers['data']['data'] as $printer): ?>
-                                <?php if ($printer['Status'] === 'Beschikbaar'): ?>
-                                    <option value="printer<?= $printer['Printer_ID'] ?>" data-printer-id="<?= $printer['Printer_ID'] ?>">
-                                        <?= htmlspecialchars($printer['Naam']) ?>
-                                    </option>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <option value="noPrinters">Geen beschikbare printers</option>
-                        <?php endif; ?>
-                    </select>
-                </div>
+            <div class="input-field">
+                <label for="printer">Printer:</label>
+                <select id="printer">                
+                    <?php if (!empty($externalPrinters)): ?>
+                        <?php foreach ($externalPrinters as $printer): ?>
+                            <?php if (isset($printer['Status']) && $printer['Status'] === 'Beschikbaar'): ?>
+                                <option value="external<?= $printer['Printer_ID'] ?>" data-printer-id="<?= $printer['Printer_ID'] ?>" data-external="true">
+                                    <?= htmlspecialchars($printer['Naam']) ?> 
+                                </option>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </div>
 
                 <div class="input-field">
                     <label for="date">Datum:</label>
@@ -210,7 +217,7 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
             <!-- Timeline Grid -->
             <div class="timeline">
                 <!-- Time Row -->
-                <div class="timeline-row"></div>
+                <div class="timeline-row" id="timeHeader"></div>
 
                 <!-- Printer Rows -->
                 <?php if (isset($printers['data']['data']) && is_array($printers['data']['data'])): ?>
@@ -219,7 +226,7 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
                     <?php endforeach; ?>
                 <?php endif; ?>
             </div>
-        </div>
+        </div> 
     </div>
 
     <script>
@@ -447,10 +454,23 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
                 colorField.style.display = (colorSelect.value === "Andere") ? "block" : "none";
             });
 
-            // Add event listeners for navigation buttons
-            document.getElementById("nextToStep2").addEventListener("click", goToStep2);
-            document.getElementById("submitReservation").addEventListener("click", addReservation);
-            
+            // Add event listeners for navigation buttons - will be attached after scripts load
+            window.addEventListener('load', function() {
+                document.getElementById("nextToStep2").addEventListener("click", function() {
+                    // Simple validation
+                    const eventName = document.getElementById("eventName").value.trim();
+                    if (!eventName) {
+                        alert("Vul alstublieft een naam in.");
+                        return;
+                    }
+                    
+                    // Hide step 1 and show step 2
+                    document.getElementById("step1Container").style.display = "none";
+                    document.getElementById("step2Container").style.display = "block";
+                });
+                document.getElementById("submitReservation").addEventListener("click", addReservation);
+            }); // End of window load event listener     
+
             // Set today's date as default
             const today = new Date().toISOString().split('T')[0];
             document.getElementById("date").value = today;
@@ -508,6 +528,7 @@ $reservations = callAPI('GET', '/api/reservatie_api.php', null);
     <script src="Scripts/auth.js"></script>
     <script src="Scripts/navigation.js"></script>
     <script src="Scripts/reservatie.js"></script>
+    <script src="Scripts/reservatie-fix.js"></script>
 
 </body>
 </html>

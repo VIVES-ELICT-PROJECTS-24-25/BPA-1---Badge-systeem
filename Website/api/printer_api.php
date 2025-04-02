@@ -1,7 +1,7 @@
 <?php
 // printer_api.php - API endpoints voor printers
 
-require_once 'config.php';
+require_once '/api/config.php';
 
 // Set headers voor Cross-Origin Resource Sharing (CORS)
 header("Access-Control-Allow-Origin: *");

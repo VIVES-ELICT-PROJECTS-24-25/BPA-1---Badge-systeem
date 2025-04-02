@@ -82,7 +82,7 @@
 
 .timeline-row {
     display: grid;
-    grid-template-columns: repeat(13, 1fr); /* 13 columns for 13 hour slots */
+    grid-template-columns: repeat(10, 1fr); /* 10 columns for 9 hour slots + buffer */
     height: 60px;
     border-bottom: 1px solid #e5e7eb;
     position: relative;
@@ -202,6 +202,35 @@
     background-color: var(--vivesRedLight);
     border: 1px solid var(--vivesRed);
     color: white;
+}
+
+/* Reservation block styling */
+.reservation-block {
+    position: absolute;
+    top: 8px;
+    height: 44px;
+    background-color: #34d399;
+    color: white;
+    border: 1px solid var(--vivesGreen);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 13px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    box-shadow: var(--boxShadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+}
+
+.reservation-block:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 2;
 }
 
 /* Responsive Design for Calendar */
