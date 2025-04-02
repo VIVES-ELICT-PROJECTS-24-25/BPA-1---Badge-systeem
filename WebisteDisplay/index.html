@@ -5,90 +5,233 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MaakLab Reservatiesysteem</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Update deze naar de nieuwere Firebase versie -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <div class="container" id="welcomePage">
-        <div class="header">
-            <h1>Welkom bij MaakLab</h1>
-            <p>Kies een optie om in te loggen:</p>
+    <!-- Header met logo en klok - altijd zichtbaar -->
+    <header class="main-header">
+        <div class="logo-container">
+            <img src="img/vives-logo.png" alt="VIVES Logo" class="vives-logo">
         </div>
-        <div class="login-options">
-            <button class="login-btn studentcard-btn" onclick="showScanPage()">
-                <i class="icon card-icon"></i>
-                <span>Studentenkaart</span>
-            </button>
-            <button class="login-btn code-btn" onclick="showCodePage()">
-                <i class="icon code-icon"></i>
-                <span>Code</span>
-            </button>
+        <div class="clock-container">
+            <div id="current-time">00:00:00</div>
+            <div id="current-date">01-01-2025</div>
         </div>
-    </div>
+    </header>
 
-    <div class="container hidden" id="scanPage">
-        <div class="header">
-            <h1>Scan je studentenkaart</h1>
-        </div>
-        <div class="scan-container">
-            <div id="scanAnimation" class="scan-animation">
-                <div class="scan-area"></div>
+    <!-- Main content area -->
+    <main>
+        <!-- Welcome Page -->
+        <div class="container" id="welcomePage">
+            <div class="header">
+                <h1>Welkom in het MaakLab</h1>
+                <p>Kies een optie om in te loggen:</p>
             </div>
-            <div class="scan-arrow">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64">
-                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" fill="#4CAF50"/>
-                </svg>
+            <div class="login-options">
+                <button class="login-btn studentcard-btn" onclick="showScanPage()">
+                    <i class="icon card-icon"></i>
+                    <span>Studentenkaart</span>
+                </button>
+                <button class="login-btn code-btn" onclick="showCodePage()">
+                    <i class="icon code-icon"></i>
+                    <span>Code</span>
+                </button>
             </div>
         </div>
-        <div class="status-message" id="scanStatus">Houd je kaart bij de scanner...</div>
-        <button class="back-btn" onclick="showWelcomePage()">Terug</button>
-    </div>
 
-    <div class="container hidden" id="codePage">
-        <div class="header">
-            <h1>Voer je 6-cijferige code in</h1>
+        <!-- Scan Page -->
+        <div class="container hidden" id="scanPage">
+            <div class="header">
+                <h1>Scan je studentenkaart</h1>
+            </div>
+            <div class="scan-container">
+                <div id="scanAnimation" class="scan-animation">
+                    <div class="scan-area"></div>
+                </div>
+                <div class="scan-arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64">
+                        <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" fill="#4CAF50"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="status-message" id="scanStatus">Houd je kaart bij de scanner...</div>
+            <button class="back-btn" onclick="showWelcomePage()">Terug</button>
         </div>
-        <div class="code-display">
-            <div id="codeInput">______</div>
-        </div>
-        <div class="keyboard">
-            <div class="keyboard-row">
-                <button class="key" onclick="addDigit('1')">1</button>
-                <button class="key" onclick="addDigit('2')">2</button>
-                <button class="key" onclick="addDigit('3')">3</button>
-            </div>
-            <div class="keyboard-row">
-                <button class="key" onclick="addDigit('4')">4</button>
-                <button class="key" onclick="addDigit('5')">5</button>
-                <button class="key" onclick="addDigit('6')">6</button>
-            </div>
-            <div class="keyboard-row">
-                <button class="key" onclick="addDigit('7')">7</button>
-                <button class="key" onclick="addDigit('8')">8</button>
-                <button class="key" onclick="addDigit('9')">9</button>
-            </div>
-            <div class="keyboard-row">
-                <button class="key clear-key" onclick="clearCode()">Wissen</button>
-                <button class="key" onclick="addDigit('0')">0</button>
-                <button class="key enter-key" onclick="submitCode()">OK</button>
-            </div>
-        </div>
-        <div class="status-message" id="codeStatus"></div>
-        <button class="back-btn" onclick="showWelcomePage()">Terug</button>
-    </div>
 
-    <div class="container hidden" id="reservationsPage">
-        <div class="header">
-            <h1>Welkom, <span id="userName"></span></h1>
-            <p>Hier zijn je actieve reserveringen:</p>
+        <!-- Code Page -->
+        <div class="container hidden" id="codePage">
+            <div class="header">
+                <h1>Voer je 6-cijferige code in</h1>
+            </div>
+            <div class="code-display">
+                <div id="codeInput">______</div>
+            </div>
+            <div class="keyboard">
+                <div class="keyboard-row">
+                    <button class="key" onclick="addDigit('1')">1</button>
+                    <button class="key" onclick="addDigit('2')">2</button>
+                    <button class="key" onclick="addDigit('3')">3</button>
+                </div>
+                <div class="keyboard-row">
+                    <button class="key" onclick="addDigit('4')">4</button>
+                    <button class="key" onclick="addDigit('5')">5</button>
+                    <button class="key" onclick="addDigit('6')">6</button>
+                </div>
+                <div class="keyboard-row">
+                    <button class="key" onclick="addDigit('7')">7</button>
+                    <button class="key" onclick="addDigit('8')">8</button>
+                    <button class="key" onclick="addDigit('9')">9</button>
+                </div>
+                <div class="keyboard-row">
+                    <button class="key clear-key" onclick="clearCode()">Wissen</button>
+                    <button class="key" onclick="addDigit('0')">0</button>
+                    <button class="key enter-key" onclick="submitCode()">OK</button>
+                </div>
+            </div>
+            <div class="status-message" id="codeStatus"></div>
+            <button class="back-btn" onclick="showWelcomePage()">Terug</button>
         </div>
-        <div class="reservations" id="reservationsList">
-            <!-- Reservations will be loaded here -->
+
+        <!-- User Reservations Page (for students and researchers) -->
+        <div class="container hidden" id="reservationsPage">
+            <div class="header">
+                <h1>Welkom, <span id="userName"></span></h1>
+                <p>Hier zijn je actieve reserveringen:</p>
+            </div>
+            <div class="reservations" id="reservationsList">
+                <!-- Reservations will be loaded here -->
+            </div>
+            <button class="logout-btn" onclick="logout()">Uitloggen</button>
         </div>
-        <button class="logout-btn" onclick="logout()">Uitloggen</button>
-    </div>
+
+        <!-- Admin Dashboard (only for beheerders) -->
+        <div class="container hidden" id="adminDashboard">
+            <div class="header">
+                <h1>Beheerder Dashboard</h1>
+                <p>Welkom, <span id="adminName"></span></p>
+            </div>
+            <div class="admin-tools">
+                <div class="admin-tools-row">
+                    <button class="admin-btn" onclick="showAdminSection('printers')">
+                        <i class="icon printer-icon"></i>
+                        <span>Printers Beheren</span>
+                    </button>
+                    <button class="admin-btn" onclick="showAdminSection('cards')">
+                        <i class="icon card-icon"></i>
+                        <span>Kaarten Beheren</span>
+                    </button>
+                </div>
+                <div class="admin-tools-row">
+                    <button class="admin-btn" onclick="showAdminSection('users')">
+                        <i class="icon user-icon"></i>
+                        <span>Gebruikers</span>
+                    </button>
+                    <button class="admin-btn" onclick="showAdminSection('reservations')">
+                        <i class="icon calendar-icon"></i>
+                        <span>Reserveringen</span>
+                    </button>
+                </div>
+                <div class="admin-tools-row">
+                    <button class="admin-btn" onclick="showAdminSection('reports')">
+                        <i class="icon report-icon"></i>
+                        <span>Rapporten</span>
+                    </button>
+                    <button class="admin-btn" onclick="showAdminSection('settings')">
+                        <i class="icon settings-icon"></i>
+                        <span>Instellingen</span>
+                    </button>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Uitloggen</button>
+        </div>
+
+        <!-- Admin Section Pages (for specific admin functions) -->
+        <div class="container hidden" id="adminPrinters">
+            <div class="header">
+                <h1>Printers Beheren</h1>
+            </div>
+            <div class="admin-content" id="printersList">
+                <!-- Printers will be loaded here -->
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="addNewPrinter()">Nieuwe Printer</button>
+                <button class="back-btn" onclick="backToAdminDashboard()">Terug</button>
+            </div>
+        </div>
+
+        <div class="container hidden" id="adminCards">
+            <div class="header">
+                <h1>Kaarten Beheren</h1>
+            </div>
+            <div class="admin-content" id="cardsList">
+                <!-- Cards will be loaded here -->
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="addNewCard()">Nieuwe Kaart</button>
+                <button class="back-btn" onclick="backToAdminDashboard()">Terug</button>
+            </div>
+        </div>
+
+        <div class="container hidden" id="adminUsers">
+            <div class="header">
+                <h1>Gebruikers Beheren</h1>
+            </div>
+            <div class="admin-content" id="usersList">
+                <!-- Users will be loaded here -->
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="addNewUser()">Nieuwe Gebruiker</button>
+                <button class="back-btn" onclick="backToAdminDashboard()">Terug</button>
+            </div>
+        </div>
+
+        <div class="container hidden" id="adminReservations">
+            <div class="header">
+                <h1>Reserveringen Beheren</h1>
+            </div>
+            <div class="admin-content" id="allReservationsList">
+                <!-- All reservations will be loaded here -->
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="addNewReservation()">Nieuwe Reservering</button>
+                <button class="back-btn" onclick="backToAdminDashboard()">Terug</button>
+            </div>
+        </div>
+
+        <div class="container hidden" id="adminReports">
+            <div class="header">
+                <h1>Rapporten</h1>
+            </div>
+            <div class="admin-content reports-section">
+                <button class="report-btn" onclick="generateReport('usage')">Gebruiksoverzicht</button>
+                <button class="report-btn" onclick="generateReport('filament')">Filament Verbruik</button>
+                <button class="report-btn" onclick="generateReport('printers')">Printer Status</button>
+                <button class="report-btn" onclick="generateReport('users')">Gebruikers Activiteit</button>
+            </div>
+            <div class="action-buttons">
+                <button class="back-btn" onclick="backToAdminDashboard()">Terug</button>
+            </div>
+        </div>
+
+        <div class="container hidden" id="adminSettings">
+            <div class="header">
+                <h1>Systeem Instellingen</h1>
+            </div>
+            <div class="admin-content" id="settingsForm">
+                <!-- Settings form will be loaded here -->
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn" onclick="saveSettings()">Instellingen Opslaan</button>
+                <button class="back-btn" onclick="backToAdminDashboard()">Terug</button>
+            </div>
+        </div>
+    </main>
 
     <script src="js/script.js"></script>
+
+    <div class="floating-logout">
+    <button class="logout-floating-btn" onclick="logout()">Uitloggen</button>
+</div>
 </body>
 </html>
