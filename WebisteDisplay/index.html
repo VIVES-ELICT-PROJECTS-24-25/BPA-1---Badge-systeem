@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaakLab Reservatiesysteem</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Update deze naar de nieuwere Firebase versie -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="container" id="welcomePage">
+        <div class="header">
+            <h1>Welkom bij MaakLab</h1>
+            <p>Kies een optie om in te loggen:</p>
+        </div>
+        <div class="login-options">
+            <button class="login-btn studentcard-btn" onclick="showScanPage()">
+                <i class="icon card-icon"></i>
+                <span>Studentenkaart</span>
+            </button>
+            <button class="login-btn code-btn" onclick="showCodePage()">
+                <i class="icon code-icon"></i>
+                <span>Code</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="container hidden" id="scanPage">
+        <div class="header">
+            <h1>Scan je studentenkaart</h1>
+        </div>
+        <div class="scan-container">
+            <div id="scanAnimation" class="scan-animation">
+                <div class="scan-area"></div>
+            </div>
+            <div class="scan-arrow">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" fill="#4CAF50"/>
+                </svg>
+            </div>
+        </div>
+        <div class="status-message" id="scanStatus">Houd je kaart bij de scanner...</div>
+        <button class="back-btn" onclick="showWelcomePage()">Terug</button>
+    </div>
+
+    <div class="container hidden" id="codePage">
+        <div class="header">
+            <h1>Voer je 6-cijferige code in</h1>
+        </div>
+        <div class="code-display">
+            <div id="codeInput">______</div>
+        </div>
+        <div class="keyboard">
+            <div class="keyboard-row">
+                <button class="key" onclick="addDigit('1')">1</button>
+                <button class="key" onclick="addDigit('2')">2</button>
+                <button class="key" onclick="addDigit('3')">3</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key" onclick="addDigit('4')">4</button>
+                <button class="key" onclick="addDigit('5')">5</button>
+                <button class="key" onclick="addDigit('6')">6</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key" onclick="addDigit('7')">7</button>
+                <button class="key" onclick="addDigit('8')">8</button>
+                <button class="key" onclick="addDigit('9')">9</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key clear-key" onclick="clearCode()">Wissen</button>
+                <button class="key" onclick="addDigit('0')">0</button>
+                <button class="key enter-key" onclick="submitCode()">OK</button>
+            </div>
+        </div>
+        <div class="status-message" id="codeStatus"></div>
+        <button class="back-btn" onclick="showWelcomePage()">Terug</button>
+    </div>
+
+    <div class="container hidden" id="reservationsPage">
+        <div class="header">
+            <h1>Welkom, <span id="userName"></span></h1>
+            <p>Hier zijn je actieve reserveringen:</p>
+        </div>
+        <div class="reservations" id="reservationsList">
+            <!-- Reservations will be loaded here -->
+        </div>
+        <button class="logout-btn" onclick="logout()">Uitloggen</button>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

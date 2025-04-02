@@ -1,0 +1,299 @@
+/* General Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    color: #333;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    height: 100%;
+    max-height: 600px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.header h1 {
+    color: #2c3e50;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.header p {
+    color: #7f8c8d;
+    font-size: 1.2em;
+}
+
+.hidden {
+    display: none;
+}
+
+button {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Connection Error Styles */
+.connection-error {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: #e74c3c;
+    color: white;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.error-icon {
+    font-size: 24px;
+    margin-right: 15px;
+}
+
+.error-message {
+    flex-grow: 1;
+}
+
+.connection-error button {
+    background-color: white;
+    color: #e74c3c;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.connection-error button:hover {
+    background-color: #f5f5f5;
+}
+
+/* Welcome Page Styles */
+.login-options {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    gap: 20px;
+}
+
+.login-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 200px;
+    height: 200px;
+    border: none;
+    border-radius: 10px;
+    background-color: #3498db;
+    color: white;
+    font-size: 1.5em;
+    padding: 20px;
+}
+
+.login-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.studentcard-btn {
+    background-color: #2ecc71;
+}
+
+.code-btn {
+    background-color: #e74c3c;
+}
+
+.icon {
+    font-size: 3em;
+    margin-bottom: 15px;
+}
+
+/* Card Scan Page Styles */
+.scan-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.scan-animation {
+    width: 300px;
+    height: 200px;
+    border: 3px dashed #3498db;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.scan-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: linear-gradient(to bottom, rgba(52, 152, 219, 0.8), rgba(52, 152, 219, 0));
+    animation: scanAnimation 2s infinite;
+}
+
+@keyframes scanAnimation {
+    0% { top: 0; }
+    50% { top: calc(100% - 15px); }
+    100% { top: 0; }
+}
+
+.scan-arrow {
+    margin-left: 40px;
+}
+
+.back-btn {
+    padding: 12px 24px;
+    background-color: #95a5a6;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+.back-btn:hover {
+    background-color: #7f8c8d;
+}
+
+.status-message {
+    color: #e74c3c;
+    font-size: 1.2em;
+    margin: 20px 0;
+    min-height: 30px;
+    text-align: center;
+}
+
+/* Code Page Styles */
+.code-display {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#codeInput {
+    font-size: 3em;
+    letter-spacing: 10px;
+    color: #2c3e50;
+    font-family: monospace;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.keyboard {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+    gap: 10px;
+}
+
+.keyboard-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.key {
+    flex: 1;
+    height: 70px;
+    font-size: 1.8em;
+    background-color: #ecf0f1;
+    border: none;
+    border-radius: 5px;
+}
+
+.key:hover {
+    background-color: #bdc3c7;
+}
+
+.clear-key {
+    background-color: #f39c12;
+    color: white;
+}
+
+.enter-key {
+    background-color: #2ecc71;
+    color: white;
+}
+
+/* Reservations Page Styles */
+.reservations {
+    width: 100%;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.reservation-card {
+    background-color: #ecf0f1;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.reservation-card h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.reservation-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.detail-item {
+    margin-bottom: 5px;
+}
+
+.detail-label {
+    font-weight: bold;
+    color: #7f8c8d;
+}
+
+.logout-btn {
+    padding: 12px 24px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    margin-top: 20px;
+}
+
+.logout-btn:hover {
+    background-color: #c0392b;
+}
