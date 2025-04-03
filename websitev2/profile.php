@@ -17,8 +17,14 @@ $userId = $_SESSION['User_ID'];
 $error = '';
 $success = '';
 
-// Gebruikersgegevens ophalen
-$stmt = $conn->prepare("SELECT * FROM User WHERE User_ID = ?");
+// Gebruikersgegevens ophalen met Vives data
+$stmt = $conn->prepare("
+    SELECT u.*, v.Vives_id, v.opleiding_id, o.naam as opleiding_naam 
+    FROM User u 
+    LEFT JOIN Vives v ON u.User_ID = v.User_ID 
+    LEFT JOIN opleidingen o ON v.opleiding_id = o.id
+    WHERE u.User_ID = ?
+");
 $stmt->execute([$userId]);
 $user = $stmt->fetch();
 
@@ -61,7 +67,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                 $success = 'Je profielgegevens zijn bijgewerkt.';
                 
                 // Refresh user data
-                $stmt = $conn->prepare("SELECT * FROM User WHERE User_ID = ?");
+                $stmt = $conn->prepare("
+                    SELECT u.*, v.Vives_id, v.opleiding_id, o.naam as opleiding_naam 
+                    FROM User u 
+                    LEFT JOIN Vives v ON u.User_ID = v.User_ID 
+                    LEFT JOIN opleidingen o ON v.opleiding_id = o.id
+                    WHERE u.User_ID = ?
+                ");
                 $stmt->execute([$userId]);
                 $user = $stmt->fetch();
             } catch (PDOException $e) {
@@ -94,6 +106,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['change_password'])) {
             $success = 'Je wachtwoord is succesvol gewijzigd.';
         } catch (PDOException $e) {
             $error = 'Er is een fout opgetreden bij het wijzigen van je wachtwoord: ' . $e->getMessage();
+        }
+    }
+}
+
+// Account verwijderen
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_account'])) {
+    $password = $_POST['password_confirm'] ?? '';
+    
+    if (empty($password)) {
+        $error = 'Wachtwoord is verplicht om je account te verwijderen.';
+    } elseif (!password_verify($password, $user['Wachtwoord'])) {
+        $error = 'Wachtwoord is onjuist.';
+    } else {
+        try {
+            // Begin transaction
+            $conn->beginTransaction();
+            
+            // Haal eerst de reserveringen op
+            $stmt = $conn->prepare("SELECT Reservatie_ID FROM Reservatie WHERE User_ID = ?");
+            $stmt->execute([$userId]);
+            $reservations = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            // Controleer en verwijder reservatie-gerelateerde entries als de tabellen bestaan
+            foreach ($reservations as $reservationId) {
+                // Verwijder kostenbewijzing_studenten entries als de tabel bestaat
+                $conn->query("DELETE FROM kostenbewijzing_studenten WHERE reservatie_id = {$reservationId}");
+                
+                // Verwijder kostenbewijzing_onderzoekers entries als de tabel bestaat
+                $conn->query("DELETE FROM kostenbewijzing_onderzoekers WHERE reservatie_id = {$reservationId}");
+            }
+            
+            // Verwijder alle reserveringen
+            $stmt = $conn->prepare("DELETE FROM Reservatie WHERE User_ID = ?");
+            $stmt->execute([$userId]);
+            
+            // Verwijder Vives gegevens
+            $stmt = $conn->prepare("DELETE FROM Vives WHERE User_ID = ?");
+            $stmt->execute([$userId]);
+            
+            // Verwijder gebruiker
+            $stmt = $conn->prepare("DELETE FROM User WHERE User_ID = ?");
+            $stmt->execute([$userId]);
+            
+            $conn->commit();
+            
+            // Beëindig sessie en stuur door naar homepage
+            session_destroy();
+            header('Location: index.php?msg=' . urlencode('Je account is succesvol verwijderd.'));
+            exit;
+        } catch (PDOException $e) {
+            $conn->rollBack();
+            $error = 'Er is een fout opgetreden bij het verwijderen van je account: ' . $e->getMessage();
         }
     }
 }
@@ -145,7 +209,7 @@ include 'includes/header.php';
                     <h5 class="mb-0"><i class="fas fa-user me-2"></i> Profielgegevens</h5>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="profile.php">
+                    <form method="post" action="profile.php#profile-info">
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="voornaam" class="form-label">Voornaam</label>
@@ -159,13 +223,29 @@ include 'includes/header.php';
                         
                         <div class="mb-3">
                             <label for="email" class="form-label">E-mailadres</label>
-                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['Emailadres']); ?>" disabled>
+                            <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['Emailadres']); ?>" required>
                         </div>
                         
                         <div class="mb-3">
                             <label for="telefoon" class="form-label">Telefoonnummer</label>
                             <input type="text" class="form-control" id="telefoon" name="telefoon" value="<?php echo htmlspecialchars($user['Telefoon']); ?>">
                         </div>
+                        
+                        <?php if (isset($user['Vives_id']) && !empty($user['Vives_id'])): ?>
+                        <div class="mb-3">
+                            <label for="rnummer" class="form-label">r-nummer</label>
+                            <input type="text" class="form-control" id="rnummer" value="<?php echo htmlspecialchars($user['Vives_id']); ?>" disabled>
+                            <div class="form-text">Je r-nummer kan alleen worden gewijzigd door een beheerder.</div>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <?php if (isset($user['opleiding_naam']) && !empty($user['opleiding_naam'])): ?>
+                        <div class="mb-3">
+                            <label for="opleiding" class="form-label">Opleiding</label>
+                            <input type="text" class="form-control" id="opleiding" value="<?php echo htmlspecialchars($user['opleiding_naam']); ?>" disabled>
+                            <div class="form-text">Je opleiding kan alleen worden gewijzigd door een beheerder.</div>
+                        </div>
+                        <?php endif; ?>
                         
                         <div class="mb-3">
                             <label for="type" class="form-label">Type gebruiker</label>
@@ -246,7 +326,7 @@ include 'includes/header.php';
                     <strong>Let op:</strong> Active reserveringen worden geannuleerd.
                 </div>
                 
-                <form id="deleteAccountForm" method="post" action="delete-account.php">
+                <form id="deleteAccountForm" method="post" action="profile.php">
                     <div class="mb-3">
                         <label for="delete_confirm" class="form-label">Typ "VERWIJDER" om te bevestigen</label>
                         <input type="text" class="form-control" id="delete_confirm" required pattern="VERWIJDER">
@@ -256,6 +336,8 @@ include 'includes/header.php';
                         <label for="password_confirm" class="form-label">Voer je wachtwoord in voor bevestiging</label>
                         <input type="password" class="form-control" id="password_confirm" name="password_confirm" required>
                     </div>
+                    
+                    <input type="hidden" name="delete_account" value="1">
                 </form>
             </div>
             <div class="modal-footer">

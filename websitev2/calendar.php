@@ -21,10 +21,9 @@ $end = isset($_GET['end']) ? $_GET['end'] : date('Y-m-d', strtotime('+30 days'))
 // Get reservations for the selected period
 $stmt = $conn->prepare("
     SELECT r.Reservatie_ID as id, r.Printer_ID as resourceId, r.PRINT_START as start, r.PRINT_END as end, 
-           CONCAT(p.Versie_Toestel, ' - ', u.Voornaam, ' ', u.Naam) as title
+           p.Versie_Toestel as title, r.User_ID as user_id
     FROM Reservatie r
     JOIN Printer p ON r.Printer_ID = p.Printer_ID
-    JOIN User u ON r.User_ID = u.User_ID
     WHERE DATE(r.PRINT_START) <= ? AND DATE(r.PRINT_END) >= ?
     ORDER BY r.PRINT_START
 ");
@@ -63,7 +62,7 @@ include 'includes/header.php';
             <div class="modal-body">
                 <div id="reservationDetails">
                     <p><strong>Printer:</strong> <span id="printer-name"></span></p>
-                    <p><strong>Gereserveerd door:</strong> <span id="user-name"></span></p>
+                    <p><strong>Reservering:</strong> <span id="reservation-id"></span></p>
                     <p><strong>Start tijd:</strong> <span id="start-time"></span></p>
                     <p><strong>Eind tijd:</strong> <span id="end-time"></span></p>
                 </div>
@@ -109,12 +108,9 @@ document.addEventListener('DOMContentLoaded', function() {
         allDaySlot: false,
         height: 'auto',
         eventClick: function(info) {
-            var eventTitle = info.event.title.split(' - ');
-            var printerName = eventTitle[0];
-            var userName = eventTitle[1] || 'Niet beschikbaar';
-            
-            document.getElementById('printer-name').textContent = printerName;
-            document.getElementById('user-name').textContent = userName;
+            // Display printer info 
+            document.getElementById('printer-name').textContent = info.event.title;
+            document.getElementById('reservation-id').textContent = 'ID: ' + info.event.id;
             document.getElementById('start-time').textContent = new Date(info.event.start).toLocaleString();
             document.getElementById('end-time').textContent = new Date(info.event.end).toLocaleString();
             

@@ -4,6 +4,13 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once 'config.php';
 
+// Include PHPMailer (adjust path if needed)
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\SMTP;
+
+require 'vendor/autoload.php'; // Adjust path to your PHPMailer installation
+
 $currentPage = 'reserve';
 $pageTitle = 'Printer Reserveren - 3D Printer Reserveringssysteem';
 
@@ -24,27 +31,32 @@ $minDate = $today;
 $maxDate = date('Y-m-d', strtotime('+30 days')); // Max 30 dagen vooruit
 
 // Haal printer informatie op
+$printer = null;
 if ($printerId > 0) {
-    $stmt = $conn->prepare("
-        SELECT p.*, f.id AS filament_id, f.Type AS filament_type, f.Kleur AS filament_color 
-        FROM Printer p
-        LEFT JOIN Filament_compatibiliteit fc ON p.Printer_ID = fc.printer_id
-        LEFT JOIN Filament f ON fc.filament_id = f.id
-        WHERE p.Printer_ID = ?
-        LIMIT 1
-    ");
-    $stmt->execute([$printerId]);
-    $printer = $stmt->fetch();
-    
-    if (!$printer) {
-        header('Location: printers.php');
-        exit;
-    }
-    
-    // Controleer of de printer beschikbaar is
-    if ($printer['Status'] !== 'beschikbaar') {
-        header('Location: printer-details.php?id=' . $printerId . '&error=not_available');
-        exit;
+    try {
+        $stmt = $conn->prepare("
+            SELECT p.*, f.id AS filament_id, f.Type AS filament_type, f.Kleur AS filament_color 
+            FROM Printer p
+            LEFT JOIN Filament_compatibiliteit fc ON p.Printer_ID = fc.printer_id
+            LEFT JOIN Filament f ON fc.filament_id = f.id
+            WHERE p.Printer_ID = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$printerId]);
+        $printer = $stmt->fetch();
+        
+        if (!$printer) {
+            header('Location: printers.php');
+            exit;
+        }
+        
+        // Controleer of de printer beschikbaar is
+        if ($printer['Status'] !== 'beschikbaar') {
+            header('Location: printer-details.php?id=' . $printerId . '&error=not_available');
+            exit;
+        }
+    } catch (PDOException $e) {
+        $error = 'Database fout: ' . $e->getMessage();
     }
 } else {
     header('Location: printers.php');
@@ -52,8 +64,13 @@ if ($printerId > 0) {
 }
 
 // Haal alle beschikbare filamenten op
-$stmt = $conn->query("SELECT * FROM Filament ORDER BY Type, Kleur");
-$filamenten = $stmt->fetchAll();
+$filamenten = [];
+try {
+    $stmt = $conn->query("SELECT * FROM Filament ORDER BY Type, Kleur");
+    $filamenten = $stmt->fetchAll();
+} catch (PDOException $e) {
+    $error = 'Database fout bij ophalen filamenten: ' . $e->getMessage();
+}
 
 // Verwerk reserveringsformulier
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -64,8 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $filamentId = isset($_POST['filament_id']) && !empty($_POST['filament_id']) ? intval($_POST['filament_id']) : null;
     $comment = trim($_POST['comment'] ?? '');
     
-    // Genereer een pincode van 4 cijfers
-    $pincode = sprintf("%04d", rand(0, 9999));
+    // Genereer een pincode van 6 cijfers
+    $pincode = sprintf("%06d", rand(0, 999999));
     
     // Validatie
     if (empty($startDate) || empty($startTime) || empty($endDate) || empty($endTime)) {
@@ -79,67 +96,279 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (strtotime($endDateTime) <= strtotime($startDateTime)) {
             $error = 'De eindtijd moet na de starttijd liggen.';
         } else {
-            // Controleer of de printer beschikbaar is in het gekozen tijdslot
-            $stmt = $conn->prepare("
-                SELECT COUNT(*) as count 
-                FROM Reservatie 
-                WHERE Printer_ID = ? 
-                AND (
-                    (PRINT_START <= ? AND PRINT_END > ?) OR
-                    (PRINT_START < ? AND PRINT_END >= ?) OR
-                    (PRINT_START >= ? AND PRINT_END <= ?)
-                )
-            ");
-            $stmt->execute([
-                $printerId, 
-                $endDateTime, $startDateTime, 
-                $endDateTime, $startDateTime,
-                $startDateTime, $endDateTime
-            ]);
-            
-            $conflictCount = $stmt->fetch()['count'];
-            
-            if ($conflictCount > 0) {
-                $error = 'De printer is niet beschikbaar in het gekozen tijdslot. Kies een andere tijd.';
-            } else {
-                try {
-                    // Genereer een nieuw Reservatie_ID (auto increment simuleren)
-                    $stmtMaxId = $conn->query("SELECT MAX(Reservatie_ID) as maxId FROM Reservatie");
-                    $result = $stmtMaxId->fetch();
-                    $newReservationId = ($result['maxId'] ?? 0) + 1;
+            try {
+                // Controleer of de printer beschikbaar is in het gekozen tijdslot
+                $stmt = $conn->prepare("
+                    SELECT COUNT(*) as count 
+                    FROM Reservatie 
+                    WHERE Printer_ID = ? 
+                    AND (
+                        (PRINT_START <= ? AND PRINT_END > ?) OR
+                        (PRINT_START < ? AND PRINT_END >= ?) OR
+                        (PRINT_START >= ? AND PRINT_END <= ?)
+                    )
+                ");
+                $stmt->execute([
+                    $printerId, 
+                    $endDateTime, $startDateTime, 
+                    $endDateTime, $startDateTime,
+                    $startDateTime, $endDateTime
+                ]);
+                
+                $conflictCount = $stmt->fetch()['count'];
+                
+                if ($conflictCount > 0) {
+                    $error = 'De printer is niet beschikbaar in het gekozen tijdslot. Kies een andere tijd.';
+                } else {
+                    // Begin transaction OUTSIDE of try block
+                    $conn->beginTransaction();
                     
-                    // Maak de reservering
-                    $stmt = $conn->prepare("
-                        INSERT INTO Reservatie (
-                            Reservatie_ID, User_ID, Printer_ID, DATE_TIME_RESERVATIE, 
-                            PRINT_START, PRINT_END, Comment, Pincode, filament_id, verbruik
-                        ) VALUES (?, ?, ?, NOW(), ?, ?, ?, ?, ?, NULL)
-                    ");
-                    
-                    $stmt->execute([
-                        $newReservationId,
-                        $userId,
-                        $printerId,
-                        $startDateTime,
-                        $endDateTime,
-                        $comment,
-                        $pincode,
-                        $filamentId
-                    ]);
-                    
-                    // Update printer status
-                    $stmt = $conn->prepare("UPDATE Printer SET Status = 'in_gebruik', LAATSTE_STATUS_CHANGE = NOW() WHERE Printer_ID = ?");
-                    $stmt->execute([$printerId]);
-                    
-                    $success = 'Je reservering is succesvol aangemaakt!';
-                    
-                    // Redirect naar reservering details
-                    header("Location: reservation-details.php?id=" . $newReservationId . "&success=created");
-                    exit;
-                    
-                } catch (PDOException $e) {
-                    $error = 'Er is een fout opgetreden bij het maken van je reservering: ' . $e->getMessage();
+                    try {
+                        // Genereer een nieuw Reservatie_ID (auto increment simuleren)
+                        $stmtMaxId = $conn->query("SELECT MAX(Reservatie_ID) as maxId FROM Reservatie");
+                        $result = $stmtMaxId->fetch();
+                        $newReservationId = ($result['maxId'] ?? 0) + 1;
+                        
+                        // Maak de reservering
+                        $stmt = $conn->prepare("
+                            INSERT INTO Reservatie (
+                                Reservatie_ID, User_ID, Printer_ID, DATE_TIME_RESERVATIE, 
+                                PRINT_START, PRINT_END, Comment, Pincode, filament_id, verbruik
+                            ) VALUES (?, ?, ?, NOW(), ?, ?, ?, ?, ?, NULL)
+                        ");
+                        
+                        $stmt->execute([
+                            $newReservationId,
+                            $userId,
+                            $printerId,
+                            $startDateTime,
+                            $endDateTime,
+                            $comment,
+                            $pincode,
+                            $filamentId
+                        ]);
+                        
+                        // REMOVED: We no longer update the printer status to keep it available
+                        // The printer should remain 'beschikbaar' so others can reserve it for different time slots
+                        
+                        // Commit transaction
+                        $conn->commit();
+                        
+                        // Get user email for notification - FIXED COLUMN NAMES based on actual DB schema
+                        $userStmt = $conn->prepare("SELECT Emailadres, Voornaam, Naam FROM User WHERE User_ID = ?");
+                        $userStmt->execute([$userId]);
+                        $user = $userStmt->fetch();
+                        
+                        // Get printer details
+                        $printerStmt = $conn->prepare("SELECT Versie_Toestel FROM Printer WHERE Printer_ID = ?");
+                        $printerStmt->execute([$printerId]);
+                        $printerDetails = $printerStmt->fetch();
+                        
+                        // Get filament details if selected
+                        $filamentName = "Eigen filament";
+                        if ($filamentId) {
+                            $filamentStmt = $conn->prepare("SELECT Type, Kleur FROM Filament WHERE id = ?");
+                            $filamentStmt->execute([$filamentId]);
+                            $filamentDetails = $filamentStmt->fetch();
+                            if ($filamentDetails) {
+                                $filamentName = $filamentDetails['Type'] . ' - ' . $filamentDetails['Kleur'];
+                            }
+                        }
+                        
+                        // Format dates for display
+                        $startDateFormatted = date('d-m-Y', strtotime($startDateTime));
+                        $startTimeFormatted = date('H:i', strtotime($startDateTime));
+                        $endDateFormatted = date('d-m-Y', strtotime($endDateTime));
+                        $endTimeFormatted = date('H:i', strtotime($endDateTime));
+                        
+                        // Send email confirmation
+                        try {
+                            // Create a new PHPMailer instance
+                            $mail = new PHPMailer(true);
+                            
+                            // Server settings
+                            $mail->isSMTP();
+                            $mail->Host       = 'smtp-auth.mailprotect.be';
+                            $mail->SMTPAuth   = true;
+                            $mail->Username   = 'reservaties@3dprintersmaaklabvives.be';
+                            $mail->Password   = '9ke53d3w2ZP64ik76qHe';
+                            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                            $mail->Port       = 587;
+                            $mail->CharSet    = 'UTF-8';
+                            
+                            // Recipients
+                            $mail->setFrom('reservaties@3dprintersmaaklabvives.be', '3D Printers MaakLab VIVES');
+                            $mail->addAddress($user['Emailadres'], $user['Voornaam'] . ' ' . $user['Naam']);
+                            
+                            // Content
+                            $mail->isHTML(true);
+                            $mail->Subject = 'Bevestiging van uw 3D Printer Reservering #' . $newReservationId;
+                            
+                            // Create the HTML email body
+                            $emailBody = '
+                            <!DOCTYPE html>
+                            <html>
+                            <head>
+                                <style>
+                                    body {
+                                        font-family: Arial, sans-serif;
+                                        line-height: 1.6;
+                                        color: #333333;
+                                    }
+                                    .container {
+                                        max-width: 600px;
+                                        margin: 0 auto;
+                                    }
+                                    .header {
+                                        background-color: #0d6efd;
+                                        color: white;
+                                        padding: 20px;
+                                        text-align: center;
+                                    }
+                                    .content {
+                                        padding: 20px;
+                                        background-color: #f9f9f9;
+                                    }
+                                    .reservation-details {
+                                        background-color: white;
+                                        border: 1px solid #dddddd;
+                                        border-radius: 5px;
+                                        padding: 15px;
+                                        margin-bottom: 20px;
+                                    }
+                                    .detail-row {
+                                        padding: 8px 0;
+                                        border-bottom: 1px solid #eeeeee;
+                                    }
+                                    .detail-row:last-child {
+                                        border-bottom: none;
+                                    }
+                                    .label {
+                                        font-weight: bold;
+                                        display: inline-block;
+                                        width: 160px;
+                                    }
+                                    .pincode {
+                                        font-size: 24px;
+                                        font-weight: bold;
+                                        color: #0d6efd;
+                                        text-align: center;
+                                        padding: 10px;
+                                        margin: 10px 0;
+                                        border: 2px dashed #0d6efd;
+                                        background-color: #f8f9ff;
+                                    }
+                                    .footer {
+                                        margin-top: 20px;
+                                        text-align: center;
+                                        font-size: 12px;
+                                        color: #666666;
+                                    }
+                                    .note {
+                                        padding: 10px;
+                                        background-color: #fff3cd;
+                                        border-left: 4px solid #ffc107;
+                                        margin: 15px 0;
+                                    }
+                                </style>
+                            </head>
+                            <body>
+                                <div class="container">
+                                    <div class="header">
+                                        <h1>Bevestiging Reservering</h1>
+                                    </div>
+                                    <div class="content">
+                                        <p>Beste ' . htmlspecialchars($user['Voornaam']) . ',</p>
+                                        
+                                        <p>Bedankt voor je reservering bij 3D Printers MaakLab VIVES. Hieronder vind je alle details van je reservering:</p>
+                                        
+                                        <div class="reservation-details">
+                                            <div class="detail-row">
+                                                <span class="label">Reserveringsnummer:</span> #' . $newReservationId . '
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="label">Printer:</span> ' . htmlspecialchars($printerDetails['Versie_Toestel']) . '
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="label">Startdatum:</span> ' . $startDateFormatted . '
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="label">Starttijd:</span> ' . $startTimeFormatted . '
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="label">Einddatum:</span> ' . $endDateFormatted . '
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="label">Eindtijd:</span> ' . $endTimeFormatted . '
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="label">Filament:</span> ' . htmlspecialchars($filamentName) . '
+                                            </div>
+                                            ' . (!empty($comment) ? '<div class="detail-row">
+                                                <span class="label">Opmerkingen:</span> ' . htmlspecialchars($comment) . '
+                                            </div>' : '') . '
+                                        </div>
+                                        
+                                        <p>Gebruik de volgende pincode om de printer te ontgrendelen:</p>
+                                        
+                                        <div class="pincode">' . $pincode . '</div>
+                                        
+                                        <div class="note">
+                                            <strong>Opmerking:</strong> Annuleren is mogelijk tot 2 uur voor de starttijd. Log in op de website om je reservering te beheren.
+                                        </div>
+                                        
+                                        <p>We wensen je veel succes met je project!</p>
+                                        
+                                        <p>Met vriendelijke groeten,<br>
+                                        Het team van 3D Printers MaakLab VIVES</p>
+                                    </div>
+                                    <div class="footer">
+                                        <p>Dit is een automatisch gegenereerd bericht. Gelieve niet te antwoorden op deze e-mail.</p>
+                                        <p>&copy; ' . date('Y') . ' 3D Printers MaakLab VIVES. Alle rechten voorbehouden.</p>
+                                    </div>
+                                </div>
+                            </body>
+                            </html>
+                            ';
+                            
+                            $mail->Body = $emailBody;
+                            
+                            // Create a plain text version for email clients that don't support HTML
+                            $mail->AltBody = "Bevestiging van uw 3D Printer Reservering #" . $newReservationId . "\n\n" .
+                                            "Printer: " . $printerDetails['Versie_Toestel'] . "\n" .
+                                            "Start: " . $startDateFormatted . " om " . $startTimeFormatted . "\n" .
+                                            "Einde: " . $endDateFormatted . " om " . $endTimeFormatted . "\n" .
+                                            "Filament: " . $filamentName . "\n" .
+                                            "Pincode: " . $pincode . "\n\n" .
+                                            "Bedankt voor je reservering bij 3D Printers MaakLab VIVES.";
+                            
+                            $mail->send();
+                            
+                        } catch (Exception $e) {
+                            // Log the error but don't stop the process
+                            error_log("Email could not be sent. Mailer Error: {$mail->ErrorInfo}");
+                        }
+                        
+                        $success = 'Je reservering is succesvol aangemaakt!';
+                        
+                        // Redirect naar reservering details
+                        header("Location: reservation-details.php?id=" . $newReservationId . "&success=created");
+                        exit;
+                        
+                    } catch (PDOException $e) {
+                        // Rollback bij fouten
+                        if ($conn->inTransaction()) {
+                            $conn->rollBack();
+                        }
+                        $error = 'Er is een fout opgetreden bij het maken van je reservering: ' . $e->getMessage();
+                    }
                 }
+            } catch (PDOException $e) {
+                // Make sure any open transaction is rolled back
+                if ($conn->inTransaction()) {
+                    $conn->rollBack();
+                }
+                $error = 'Database fout bij controleren beschikbaarheid: ' . $e->getMessage();
             }
         }
     }
@@ -150,12 +379,14 @@ include 'includes/header.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.getElementById('date');
+    const startDateInput = document.getElementById('start_date');
     const startTimeInput = document.getElementById('start_time');
     
     // Function to disable past hours on the current day
     function updateAvailableTimes() {
-        const selectedDate = new Date(dateInput.value);
+        if (!startDateInput || !startTimeInput) return; // Guard clause if elements don't exist
+        
+        const selectedDate = new Date(startDateInput.value);
         const today = new Date();
         
         // Reset all options to enabled
@@ -177,10 +408,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Update times when date changes
-    dateInput.addEventListener('change', updateAvailableTimes);
-    
-    // Initial update
-    updateAvailableTimes();
+    if (startDateInput) {
+        startDateInput.addEventListener('change', updateAvailableTimes);
+        // Initial update
+        updateAvailableTimes();
+    }
 });
 </script>
 
@@ -277,8 +509,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="card-header">
                     <h5 class="mb-0">Printer Informatie</h5>
                 </div>
-                <img src="assets/img/printer-<?php echo $printer['Printer_ID']; ?>.jpg" class="card-img-top" alt="<?php echo htmlspecialchars($printer['Versie_Toestel']); ?>" onerror="this.src='assets/img/printer-default.jpg'">
-                <div class="card-body">
+                <img src="assets/img/printer-<?php echo $printer['Printer_ID']; ?>.jpg" 
+    class="card-img-top" 
+    alt="<?php echo htmlspecialchars($printer['Versie_Toestel']); ?>" 
+    onerror="this.outerHTML='<div class=\'card-img-top d-flex justify-content-center align-items-center bg-light\' style=\'height: 200px;\'><p class=\'text-muted mb-0\'>Geen afbeelding beschikbaar voor <?php echo htmlspecialchars($printer['Versie_Toestel']); ?></p></div>'">                <div class="card-body">
                     <h5 class="card-title"><?php echo htmlspecialchars($printer['Versie_Toestel']); ?></h5>
                     <p class="card-text">
                         <strong>Software:</strong> <?php echo htmlspecialchars($printer['Software'] ?? 'Niet gespecificeerd'); ?><br>
@@ -364,32 +598,38 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Event listeners
-    startDateInput.addEventListener('change', function() {
-        if (startDateInput.value > endDateInput.value) {
-            endDateInput.value = startDateInput.value;
-        }
-        updateEndTime();
-    });
+    if (startDateInput && endDateInput) {
+        startDateInput.addEventListener('change', function() {
+            if (startDateInput.value > endDateInput.value) {
+                endDateInput.value = startDateInput.value;
+            }
+            updateEndTime();
+        });
+    }
     
-    startTimeInput.addEventListener('change', updateEndTime);
+    if (startTimeInput) {
+        startTimeInput.addEventListener('change', updateEndTime);
+    }
     
     // Form validatie
-    reservationForm.addEventListener('submit', function(e) {
-        const startDateTime = new Date(`${startDateInput.value}T${startTimeInput.value}`);
-        const endDateTime = new Date(`${endDateInput.value}T${endTimeInput.value}`);
-        
-        if (endDateTime <= startDateTime) {
-            e.preventDefault();
-            alert('De eindtijd moet na de starttijd liggen.');
-        }
-        
-        // Check maximale reserveringsduur (8 uur)
-        const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
-        if (diffHours > 8) {
-            e.preventDefault();
-            alert('De maximale reserveringsduur is 8 uur. Pas je eindtijd aan.');
-        }
-    });
+    if (reservationForm) {
+        reservationForm.addEventListener('submit', function(e) {
+            const startDateTime = new Date(`${startDateInput.value}T${startTimeInput.value}`);
+            const endDateTime = new Date(`${endDateInput.value}T${endTimeInput.value}`);
+            
+            if (endDateTime <= startDateTime) {
+                e.preventDefault();
+                alert('De eindtijd moet na de starttijd liggen.');
+            }
+            
+            // Check maximale reserveringsduur (8 uur)
+            const diffHours = (endDateTime - startDateTime) / (1000 * 60 * 60);
+            if (diffHours > 8) {
+                e.preventDefault();
+                alert('De maximale reserveringsduur is 8 uur. Pas je eindtijd aan.');
+            }
+        });
+    }
 });
 </script>
 

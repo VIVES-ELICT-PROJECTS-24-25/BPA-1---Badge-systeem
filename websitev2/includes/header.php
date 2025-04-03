@@ -12,14 +12,6 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     
-    <?php
-    // Debug commentaar in HTML broncode - kijk in View Source om dit te zien
-    if (isset($_SESSION)) {
-        echo "<!-- DEBUG: User_ID: " . (isset($_SESSION['User_ID']) ? $_SESSION['User_ID'] : 'niet ingesteld') . " -->";
-        echo "<!-- DEBUG: Type: " . (isset($_SESSION['Type']) ? $_SESSION['Type'] : 'niet ingesteld') . " -->";
-        echo "<!-- DEBUG: Is Admin?: " . (isset($_SESSION['Type']) && $_SESSION['Type'] == 'beheerder' ? 'JA' : 'NEE') . " -->";
-    }
-    ?>
 </head>
 <body>
     <header>
@@ -100,17 +92,3 @@
         </nav>
     </header>
     <main class="py-4">
-    
-    <?php 
-    // ADMIN DEBUG LINK - verwijder in productie
-    if (isset($_SESSION['User_ID'])): 
-    ?>
-    <div class="container">
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <strong>Admin Debug:</strong> 
-            <?php echo isset($_SESSION['Type']) ? "Type = " . $_SESSION['Type'] : "Geen Type ingesteld"; ?> |
-            <a href="admin_check.php" class="alert-link">Admin Toegang Check/Fix Tool</a>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    </div>
-    <?php endif; ?>

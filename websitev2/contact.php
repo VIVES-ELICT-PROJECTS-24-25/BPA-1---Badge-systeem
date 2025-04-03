@@ -4,13 +4,20 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once 'config.php';
 
+// Include PHPMailer
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\SMTP;
+
+require 'vendor/autoload.php'; // Zorg ervoor dat dit pad correct is
+
 $currentPage = 'contact';
 $pageTitle = 'Contact - 3D Printer Reserveringssysteem';
 
 $success = '';
 $error = '';
 
-// Add this at the top of contact.php
+// Form handling with PHPMailer
 if (isset($_POST['submit_contact'])) {
     $name = $_POST['name'] ?? '';
     $email = $_POST['email'] ?? '';
@@ -23,26 +30,326 @@ if (isset($_POST['submit_contact'])) {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Vul een geldig e-mailadres in.";
     } else {
-        // Email headers
-        $headers = "From: " . $email . "\r\n";
-        $headers .= "Reply-To: " . $email . "\r\n";
-        $headers .= "MIME-Version: 1.0\r\n";
-        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+        // Huidige datum en tijd
+        $currentDateTime = date('d-m-Y H:i');
         
-        // Email content
-        $mail_content = "<p><strong>Naam:</strong> " . htmlspecialchars($name) . "</p>";
-        $mail_content .= "<p><strong>E-mail:</strong> " . htmlspecialchars($email) . "</p>";
-        $mail_content .= "<p><strong>Bericht:</strong></p>";
-        $mail_content .= "<p>" . nl2br(htmlspecialchars($message)) . "</p>";
-        
-        // Recipient email (change this to the actual contact email)
-        $to = "larsvandekerkhove@gmail.com";
-        
-        // Send the email
-        if (mail($to, "Contact formulier: " . $subject, $mail_content, $headers)) {
-            $success = "Je bericht is verzonden. Wij nemen zo snel mogelijk contact met je op.";
-        } else {
-            $error = "Er is een probleem opgetreden bij het verzenden van je bericht. Probeer het later opnieuw.";
+        try {
+            // 1. MAIL NAAR BEHEERDER
+            $mailAdmin = new PHPMailer(true);
+            
+            // Server settings
+            $mailAdmin->isSMTP();
+            $mailAdmin->Host       = 'smtp-auth.mailprotect.be';
+            $mailAdmin->SMTPAuth   = true;
+            $mailAdmin->Username   = 'reservaties@3dprintersmaaklabvives.be';
+            $mailAdmin->Password   = '9ke53d3w2ZP64ik76qHe';
+            $mailAdmin->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mailAdmin->Port       = 587;
+            $mailAdmin->CharSet    = 'UTF-8';
+            
+            // Recipients
+            $mailAdmin->setFrom('reservaties@3dprintersmaaklabvives.be', '3D Printers Maaklab VIVES');
+            $mailAdmin->addAddress('inschrijvingen@3dprintersmaaklabvives.be', 'Beheerder');
+            $mailAdmin->addReplyTo($email, $name);
+            
+            // Content
+            $mailAdmin->isHTML(true);
+            $mailAdmin->Subject = "Contact formulier: " . $subject;
+            
+            // Email content met verbeterde opmaak
+            $mailContentAdmin = '
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                        color: #333333;
+                        max-width: 600px;
+                        margin: 0 auto;
+                    }
+                    .email-container {
+                        border: 1px solid #dddddd;
+                        border-radius: 5px;
+                        overflow: hidden;
+                    }
+                    .email-header {
+                        background-color: #0056b3;
+                        color: white;
+                        padding: 20px;
+                        text-align: center;
+                    }
+                    .email-body {
+                        padding: 20px;
+                        background-color: #f9f9f9;
+                    }
+                    .email-footer {
+                        background-color: #f1f1f1;
+                        padding: 15px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #666666;
+                    }
+                    .contact-info {
+                        background-color: white;
+                        border-radius: 5px;
+                        padding: 15px;
+                        margin-bottom: 15px;
+                        border-left: 4px solid #0056b3;
+                    }
+                    .message-box {
+                        background-color: white;
+                        border-radius: 5px;
+                        padding: 15px;
+                        border-left: 4px solid #28a745;
+                    }
+                    h2 {
+                        color: #0056b3;
+                        margin-top: 0;
+                    }
+                    .info-row {
+                        margin-bottom: 10px;
+                    }
+                    .label {
+                        font-weight: bold;
+                        color: #555555;
+                    }
+                    .timestamp {
+                        color: #888888;
+                        font-size: 12px;
+                        margin-top: 20px;
+                        text-align: right;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="email-header">
+                        <h1>Nieuw Contactformulier Bericht</h1>
+                    </div>
+                    <div class="email-body">
+                        <div class="contact-info">
+                            <h2>Contactgegevens</h2>
+                            <div class="info-row">
+                                <span class="label">Naam:</span> ' . htmlspecialchars($name) . '
+                            </div>
+                            <div class="info-row">
+                                <span class="label">E-mail:</span> ' . htmlspecialchars($email) . '
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Onderwerp:</span> ' . htmlspecialchars($subject) . '
+                            </div>
+                        </div>
+                        
+                        <div class="message-box">
+                            <h2>Bericht</h2>
+                            <p>' . nl2br(htmlspecialchars($message)) . '</p>
+                        </div>
+                        
+                        <div class="timestamp">
+                            Verzonden op: ' . $currentDateTime . '
+                        </div>
+                    </div>
+                    <div class="email-footer">
+                        <p>Dit bericht is verzonden via het contactformulier op de website van 3D Printers Maaklab VIVES.</p>
+                        <p>&copy; ' . date('Y') . ' Maaklab VIVES - Alle rechten voorbehouden</p>
+                    </div>
+                </div>
+            </body>
+            </html>';
+            
+            $mailAdmin->Body = $mailContentAdmin;
+            
+            // Plain text alternative
+            $plainTextAdmin = "NIEUW CONTACTFORMULIER BERICHT\n\n";
+            $plainTextAdmin .= "CONTACTGEGEVENS:\n";
+            $plainTextAdmin .= "Naam: " . $name . "\n";
+            $plainTextAdmin .= "E-mail: " . $email . "\n";
+            $plainTextAdmin .= "Onderwerp: " . $subject . "\n\n";
+            $plainTextAdmin .= "BERICHT:\n" . $message . "\n\n";
+            $plainTextAdmin .= "Verzonden op: " . $currentDateTime . "\n\n";
+            $plainTextAdmin .= "Dit bericht is verzonden via het contactformulier op de website van 3D Printers Maaklab VIVES.";
+            
+            $mailAdmin->AltBody = $plainTextAdmin;
+            
+            // Send the email to admin
+            $mailAdmin->send();
+            
+            // 2. BEVESTIGINGSMAIL NAAR AFZENDER
+            $mailConfirmation = new PHPMailer(true);
+            
+            // Server settings (hergebruik dezelfde instellingen)
+            $mailConfirmation->isSMTP();
+            $mailConfirmation->Host       = 'smtp-auth.mailprotect.be';
+            $mailConfirmation->SMTPAuth   = true;
+            $mailConfirmation->Username   = 'reservaties@3dprintersmaaklabvives.be';
+            $mailConfirmation->Password   = '9ke53d3w2ZP64ik76qHe';
+            $mailConfirmation->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mailConfirmation->Port       = 587;
+            $mailConfirmation->CharSet    = 'UTF-8';
+            
+            // Recipients voor bevestigingsmail
+            $mailConfirmation->setFrom('reservaties@3dprintersmaaklabvives.be', '3D Printers Maaklab VIVES');
+            $mailConfirmation->addAddress($email, $name); // Stuur naar de persoon die het contactformulier heeft ingevuld
+            
+            // Content
+            $mailConfirmation->isHTML(true);
+            $mailConfirmation->Subject = "Bevestiging: Uw bericht aan 3D Printers Maaklab VIVES";
+            
+            // Email content voor bevestigingsmail
+            $mailContentConfirmation = '
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                        color: #333333;
+                        max-width: 600px;
+                        margin: 0 auto;
+                    }
+                    .email-container {
+                        border: 1px solid #dddddd;
+                        border-radius: 5px;
+                        overflow: hidden;
+                    }
+                    .email-header {
+                        background-color: #28a745;
+                        color: white;
+                        padding: 20px;
+                        text-align: center;
+                    }
+                    .email-body {
+                        padding: 20px;
+                        background-color: #f9f9f9;
+                    }
+                    .email-footer {
+                        background-color: #f1f1f1;
+                        padding: 15px;
+                        text-align: center;
+                        font-size: 12px;
+                        color: #666666;
+                    }
+                    .thank-you {
+                        background-color: white;
+                        border-radius: 5px;
+                        padding: 15px;
+                        margin-bottom: 15px;
+                        border-left: 4px solid #28a745;
+                    }
+                    .message-summary {
+                        background-color: white;
+                        border-radius: 5px;
+                        padding: 15px;
+                        margin-bottom: 15px;
+                        border-left: 4px solid #0056b3;
+                    }
+                    .next-steps {
+                        background-color: white;
+                        border-radius: 5px;
+                        padding: 15px;
+                        border-left: 4px solid #ffc107;
+                    }
+                    h2 {
+                        color: #0056b3;
+                        margin-top: 0;
+                    }
+                    .info-row {
+                        margin-bottom: 10px;
+                    }
+                    .label {
+                        font-weight: bold;
+                        color: #555555;
+                    }
+                    .timestamp {
+                        color: #888888;
+                        font-size: 12px;
+                        margin-top: 20px;
+                        text-align: right;
+                    }
+                    .logo {
+                        max-width: 150px;
+                        margin: 0 auto 10px auto;
+                        display: block;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="email-container">
+                    <div class="email-header">
+                        <h1>Bevestiging Ontvangst</h1>
+                    </div>
+                    <div class="email-body">
+                        <div class="thank-you">
+                            <h2>Beste ' . htmlspecialchars($name) . ',</h2>
+                            <p>Hartelijk dank voor uw bericht aan 3D Printers Maaklab VIVES. Wij hebben uw aanvraag in goede orde ontvangen en zullen zo spoedig mogelijk contact met u opnemen.</p>
+                        </div>
+                        
+                        <div class="message-summary">
+                            <h2>Samenvatting van uw bericht</h2>
+                            <div class="info-row">
+                                <span class="label">Naam:</span> ' . htmlspecialchars($name) . '
+                            </div>
+                            <div class="info-row">
+                                <span class="label">E-mail:</span> ' . htmlspecialchars($email) . '
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Onderwerp:</span> ' . htmlspecialchars($subject) . '
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Bericht:</span>
+                                <p>' . nl2br(htmlspecialchars($message)) . '</p>
+                            </div>
+                        </div>
+                        
+                        <div class="next-steps">
+                            <h2>Wat kunt u verwachten?</h2>
+                            <p>Onze medewerkers streven ernaar om binnen 2 werkdagen te reageren op uw bericht. Heeft u dringende vragen? Dan kunt u ons ook telefonisch bereiken op +32 2 123 45 67 tijdens onze openingsuren:</p>
+                            <p><strong>Donderdag:</strong> 14:00 - 18:00</p>
+                        </div>
+                        
+                        <div class="timestamp">
+                            Verzonden op: ' . $currentDateTime . '
+                        </div>
+                    </div>
+                    <div class="email-footer">
+                        <p>Dit is een automatisch gegenereerde e-mail, u kunt deze e-mail niet beantwoorden.</p>
+                        <p>Bezoek onze website: <a href="https://3dprintersmaaklabvives.be">3dprintersmaaklabvives.be</a></p>
+                        <p>&copy; ' . date('Y') . ' Maaklab VIVES - Alle rechten voorbehouden</p>
+                    </div>
+                </div>
+            </body>
+            </html>';
+            
+            $mailConfirmation->Body = $mailContentConfirmation;
+            
+            // Plain text alternative voor bevestigingsmail
+            $plainTextConfirmation = "BEVESTIGING VAN UW BERICHT AAN 3D PRINTERS MAAKLAB VIVES\n\n";
+            $plainTextConfirmation .= "Beste " . $name . ",\n\n";
+            $plainTextConfirmation .= "Hartelijk dank voor uw bericht. Wij hebben uw aanvraag in goede orde ontvangen en zullen zo spoedig mogelijk contact met u opnemen.\n\n";
+            $plainTextConfirmation .= "SAMENVATTING VAN UW BERICHT:\n";
+            $plainTextConfirmation .= "Naam: " . $name . "\n";
+            $plainTextConfirmation .= "E-mail: " . $email . "\n";
+            $plainTextConfirmation .= "Onderwerp: " . $subject . "\n";
+            $plainTextConfirmation .= "Bericht:\n" . $message . "\n\n";
+            $plainTextConfirmation .= "WAT KUNT U VERWACHTEN?\n";
+            $plainTextConfirmation .= "Onze medewerkers streven ernaar om binnen 2 werkdagen te reageren op uw bericht. Heeft u dringende vragen? Dan kunt u ons ook telefonisch bereiken op +32 2 123 45 67 tijdens onze openingsuren:\n";
+            $plainTextConfirmation .= "Donderdag: 14:00 - 18:00\n\n";
+            $plainTextConfirmation .= "Verzonden op: " . $currentDateTime . "\n\n";
+            $plainTextConfirmation .= "Dit is een automatisch gegenereerde e-mail, u kunt deze e-mail niet beantwoorden.\n";
+            $plainTextConfirmation .= "Bezoek onze website: https://3dprintersmaaklabvives.be\n\n";
+            $plainTextConfirmation .= "© " . date('Y') . " Maaklab VIVES - Alle rechten voorbehouden";
+            
+            $mailConfirmation->AltBody = $plainTextConfirmation;
+            
+            // Send the confirmation email
+            $mailConfirmation->send();
+            
+            $success = "Je bericht is verzonden. We hebben een bevestiging gestuurd naar je e-mailadres.";
+        } catch (Exception $e) {
+            $error = "Er is een probleem opgetreden bij het verzenden van je bericht: " . $e->getMessage();
         }
     }
 }
@@ -95,7 +402,7 @@ include 'includes/header.php';
                                 Vul alstublieft uw bericht in.
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Verzenden</button>
+                        <button type="submit" name="submit_contact" class="btn btn-primary">Verzenden</button>
                     </form>
                 </div>
             </div>

@@ -9,9 +9,6 @@ $pageTitle = 'Inloggen - 3D Printer Reserveringssysteem';
 
 $error = '';
 
-// DEBUG CODE - tijdelijk om gebruiker info te controleren
-// echo "<pre>SESSION: "; print_r($_SESSION); echo "</pre>";
-
 // Als gebruiker al is ingelogd, redirect naar home
 if (isset($_SESSION['User_ID'])) {
     header('Location: index.php');
@@ -38,19 +35,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$email]);
             $user = $stmt->fetch();
             
-            // DEBUG LINE
-            // echo "<pre>Database user data: "; print_r($user); echo "</pre>";
-            
             if ($user && password_verify($wachtwoord, $user['Wachtwoord'])) {
+                // Check of gebruiker een onderzoeker is en zo ja, of deze is goedgekeurd
+                if ($user['Type'] === 'onderzoeker') {
+                    $approvalStmt = $conn->prepare("
+                        SELECT Goedgekeurd 
+                        FROM Onderzoeker_Goedkeuring 
+                        WHERE User_ID = ?
+                    ");
+                    $approvalStmt->execute([$user['User_ID']]);
+                    $approval = $approvalStmt->fetch();
+                    
+                    if (!$approval || $approval['Goedgekeurd'] != 1) {
+                        $error = 'Je account is nog niet goedgekeurd door een beheerder. Controleer je e-mail of neem contact op met de beheerder.';
+                        include 'includes/header.php';
+                        ?>
+                        <div class="container">
+                            <div class="row justify-content-center">
+                                <div class="col-md-8 col-lg-5">
+                                    <div class="card shadow-sm">
+                                        <div class="card-body p-4 p-md-5">
+                                            <h1 class="text-center mb-4">Inloggen</h1>
+                                            
+                                            <div class="alert alert-warning">
+                                                <h5 class="alert-heading">Account in afwachting van goedkeuring</h5>
+                                                <p><?php echo $error; ?></p>
+                                                <hr>
+                                                <p class="mb-0">Zodra je account is goedgekeurd, ontvang je een bevestigingsmail.</p>
+                                            </div>
+                                            
+                                            <div class="text-center mt-4">
+                                                <a href="index.php" class="btn btn-primary">Terug naar homepage</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <?php
+                        include 'includes/footer.php';
+                        exit;
+                    }
+                }
+                
                 // Inloggen succesvol, sessie instellingen
                 $_SESSION['User_ID'] = $user['User_ID'];
                 $_SESSION['Voornaam'] = $user['Voornaam'];
                 $_SESSION['Naam'] = $user['Naam'];
                 $_SESSION['Type'] = $user['Type'];
-                
-                // Debug code om te zien wat er in de sessie wordt opgeslagen
-                // echo "<pre>Sessie na login: "; print_r($_SESSION); echo "</pre>"; 
-                // exit;
                 
                 // Update laatste aanmelding en actieve status
                 $updateStmt = $conn->prepare("

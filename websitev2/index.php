@@ -76,8 +76,10 @@ include 'includes/header.php';
                 <div class="col-md-4 mb-4">
                     <div class="card printer-card">
                         <div class="position-relative">
-                            <img src="assets/img/printer-<?php echo $printer['id']; ?>.jpg" alt="<?php echo htmlspecialchars($printer['name']); ?>" class="card-img-top" onerror="this.src='assets/img/printer-default.jpg'">
-                        </div>
+                            <img src="assets/img/printer-<?php echo $printer['Printer_ID']; ?>.jpg" 
+    class="card-img-top" 
+    alt="<?php echo htmlspecialchars($printer['Versie_Toestel']); ?>" 
+    onerror="this.outerHTML='<div class=\'card-img-top d-flex justify-content-center align-items-center bg-light\' style=\'height: 200px;\'><p class=\'text-muted mb-0\'>Geen afbeelding beschikbaar voor <?php echo htmlspecialchars($printer['Versie_Toestel']); ?></p></div>'">                        </div>
                         <div class="card-body">
                             <h5 class="card-title"><?php echo htmlspecialchars($printer['name']); ?></h5>
                             <p class="card-text">
