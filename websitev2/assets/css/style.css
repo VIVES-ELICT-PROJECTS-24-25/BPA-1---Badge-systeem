@@ -124,8 +124,9 @@ footer a:hover {
 }
 
 .printer-card .card-img-top {
-    height: 200px;
+    height: 100px;
     object-fit: cover;
+    width: 100%;
 }
 
 .printer-status {
@@ -253,10 +254,6 @@ footer a:hover {
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
-.card-img-top {
-    height: 300px;
-    object-fit: cover;
-}
 
 /* Responsieve aanpassingen */
 @media (max-width: 768px) {

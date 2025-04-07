@@ -82,11 +82,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Wachtwoord hashen
                 $hashedPassword = password_hash($wachtwoord, PASSWORD_DEFAULT);
                 
-                // Gebruiker aanmaken
+                // Gebruiker aanmaken (met HulpNodig standaard op 1)
                 $stmt = $conn->prepare("
                     INSERT INTO User (User_ID, Voornaam, Naam, Emailadres, Telefoon, Wachtwoord, 
-                                    Type, AanmaakAccount, LaatsteAanmelding, HuidigActief)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 1)
+                                    Type, AanmaakAccount, LaatsteAanmelding, HuidigActief, HulpNodig)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 1, 1)
                 ");
                 
                 $stmt->execute([

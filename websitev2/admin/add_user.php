@@ -102,59 +102,65 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="row">
             <!-- Sidebar -->
 <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
-    <div class="position-sticky pt-3">
-        <div class="d-flex justify-content-center mb-4">
-            <a href="../index.php" class="text-white text-decoration-none">
-                <span class="fs-4">3D Printer Admin</span>
-            </a>
-        </div>
-        
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link" href="index.php">
-                    <i class="fas fa-tachometer-alt me-2"></i>
-                    Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="users.php">
-                    <i class="fas fa-users me-2"></i>
-                    Gebruikers
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="printers.php">
-                    <i class="fas fa-print me-2"></i>
-                    Printers
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="reservations.php">
-                    <i class="fas fa-calendar-alt me-2"></i>
-                    Reserveringen
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="filaments.php">
-                    <i class="fas fa-layer-group me-2"></i>
-                    Filament
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="../index.php">
-                    <i class="fas fa-home me-2"></i>
-                    Terug naar site
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-danger" href="../logout.php">
-                    <i class="fas fa-sign-out-alt me-2"></i>
-                    Uitloggen
-                </a>
-            </li>
-        </ul>
-    </div>
-</nav>
+                <div class="position-sticky pt-3">
+                    <div class="d-flex justify-content-center mb-4">
+                        <a href="../index.php" class="text-white text-decoration-none">
+                            <span class="fs-4">3D Printer Admin</span>
+                        </a>
+                    </div>
+                    
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="users.php">
+                                <i class="fas fa-users me-2"></i>
+                                Gebruikers
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="printers.php">
+                                <i class="fas fa-print me-2"></i>
+                                Printers
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="reservations.php">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Reserveringen
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="filaments.php">
+                                <i class="fas fa-layer-group me-2"></i>
+                                Filament
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="openingsuren.php">
+                                <i class="fas fa-clock me-2"></i>
+                                Openingsuren
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="../index.php">
+                                <i class="fas fa-home me-2"></i>
+                                Terug naar site
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="../logout.php">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                Uitloggen
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
             
             <!-- Main content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">

@@ -68,11 +68,24 @@ if (isset($_GET['remove_admin']) && is_numeric($_GET['remove_admin'])) {
     }
 }
 
+// Toggle hulp instelling
+if (isset($_GET['toggle_help']) && is_numeric($_GET['toggle_help'])) {
+    $userId = $_GET['toggle_help'];
+    
+    try {
+        $stmt = $conn->prepare("UPDATE User SET HulpNodig = NOT HulpNodig WHERE User_ID = ?");
+        $stmt->execute([$userId]);
+        $successMessage = 'Hulp instelling voor gebruiker is succesvol gewijzigd.';
+    } catch (PDOException $e) {
+        $errorMessage = 'Fout bij wijzigen van hulp instelling: ' . $e->getMessage();
+    }
+}
+
 // Gebruikers ophalen
 try {
     // Bepaal sortering
     $sortBy = isset($_GET['sort']) ? $_GET['sort'] : 'User_ID';
-    $validSortFields = ['User_ID', 'Voornaam', 'Naam', 'Emailadres', 'Type', 'AanmaakAccount', 'LaatsteAanmelding'];
+    $validSortFields = ['User_ID', 'Voornaam', 'Naam', 'Emailadres', 'Type', 'AanmaakAccount', 'LaatsteAanmelding', 'HulpNodig'];
     $sortBy = in_array($sortBy, $validSortFields) ? $sortBy : 'User_ID';
     
     // Bepaal sorteervolgorde
@@ -105,7 +118,7 @@ try {
     
     // Gebruikers ophalen
     $stmt = $conn->prepare(
-        "SELECT User_ID, Voornaam, Naam, Emailadres, Telefoon, Type, AanmaakAccount, LaatsteAanmelding, HuidigActief 
+        "SELECT User_ID, Voornaam, Naam, Emailadres, Telefoon, Type, AanmaakAccount, LaatsteAanmelding, HuidigActief, HulpNodig 
         FROM User" . $searchWhere . " 
         ORDER BY $sortBy $sortOrder 
         LIMIT $perPage OFFSET $offset"
@@ -195,6 +208,12 @@ try {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="openingsuren.php">
+                                <i class="fas fa-clock me-2"></i>
+                                Openingsuren
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="../index.php">
                                 <i class="fas fa-home me-2"></i>
                                 Terug naar site
@@ -258,6 +277,7 @@ try {
                                     <option value="Type" <?php echo ($sortBy == 'Type') ? 'selected' : ''; ?>>Sorteer op type</option>
                                     <option value="AanmaakAccount" <?php echo ($sortBy == 'AanmaakAccount') ? 'selected' : ''; ?>>Sorteer op registratiedatum</option>
                                     <option value="LaatsteAanmelding" <?php echo ($sortBy == 'LaatsteAanmelding') ? 'selected' : ''; ?>>Sorteer op laatste login</option>
+                                    <option value="HulpNodig" <?php echo ($sortBy == 'HulpNodig') ? 'selected' : ''; ?>>Sorteer op hulp nodig</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
@@ -288,6 +308,7 @@ try {
                                         <th>Geregistreerd</th>
                                         <th>Laatste login</th>
                                         <th>Status</th>
+                                        <th>Hulp nodig</th>
                                         <th>Reserveringen</th>
                                         <th>Acties</th>
                                     </tr>
@@ -295,7 +316,7 @@ try {
                                 <tbody>
                                     <?php if (empty($users)): ?>
                                         <tr>
-                                            <td colspan="9" class="text-center">Geen gebruikers gevonden</td>
+                                            <td colspan="10" class="text-center">Geen gebruikers gevonden</td>
                                         </tr>
                                     <?php else: ?>
                                         <?php foreach ($users as $user): ?>
@@ -335,6 +356,13 @@ try {
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
+                                                    <?php if (isset($user['HulpNodig']) && $user['HulpNodig']): ?>
+                                                        <span class="badge bg-success">Ja</span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-secondary">Nee</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
                                                     <?php 
                                                     $count = isset($userReservations[$user['User_ID']]) ? $userReservations[$user['User_ID']] : 0;
                                                     echo $count;
@@ -347,6 +375,12 @@ try {
                                                         </a>
                                                         <a href="view_user_reservations.php?id=<?php echo $user['User_ID']; ?>" class="btn btn-info" title="Reserveringen bekijken">
                                                             <i class="fas fa-calendar"></i>
+                                                        </a>
+                                                        
+                                                        <a href="users.php?toggle_help=<?php echo $user['User_ID']; ?>" 
+                                                           class="btn <?php echo isset($user['HulpNodig']) && $user['HulpNodig'] ? 'btn-warning' : 'btn-success'; ?>" 
+                                                           title="<?php echo isset($user['HulpNodig']) && $user['HulpNodig'] ? 'Hulp uitschakelen' : 'Hulp inschakelen'; ?>">
+                                                            <i class="fas <?php echo isset($user['HulpNodig']) && $user['HulpNodig'] ? 'fa-times' : 'fa-check'; ?>"></i>
                                                         </a>
                                                         
                                                         <?php if ($user['Type'] != 'beheerder'): ?>

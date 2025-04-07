@@ -59,6 +59,7 @@ function initializeCalendar(calendarEl) {
             }
         },
         eventClick: function(info) {
+            console.log(info);
             showEventDetails(info.event);
         },
         eventTimeFormat: {

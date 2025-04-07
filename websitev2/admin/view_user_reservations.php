@@ -31,21 +31,55 @@ try {
 }
 
 // Bepaal sortering
-$sortBy = isset($_GET['sort']) ? $_GET['sort'] : 'StartTijd';
-$validSortFields = ['Reservatie_ID', 'Printer_ID', 'StartTijd', 'EindTijd', 'Status'];
-$sortBy = in_array($sortBy, $validSortFields) ? $sortBy : 'StartTijd';
+$sortBy = isset($_GET['sort']) ? $_GET['sort'] : 'PRINT_START';
+$validSortFields = ['Reservatie_ID', 'Printer_ID', 'PRINT_START', 'PRINT_END'];
+$sortBy = in_array($sortBy, $validSortFields) ? $sortBy : 'PRINT_START';
 
 // Bepaal sorteervolgorde
 $sortOrder = isset($_GET['order']) && $_GET['order'] === 'desc' ? 'DESC' : 'ASC';
 
-// Filter op status
+// Filter op status - via datum vergelijkingen in plaats van status kolom
 $statusFilter = isset($_GET['status']) ? $_GET['status'] : '';
+$helpNeededFilter = isset($_GET['help_needed']) ? (int)$_GET['help_needed'] : -1;
+$adminPrintFilter = isset($_GET['admin_print']) ? (int)$_GET['admin_print'] : -1;
+
 $statusWhere = '';
 $filterParams = [$userId];
+$now = date('Y-m-d H:i:s');
 
 if (!empty($statusFilter)) {
-    $statusWhere = " AND Status = ?";
-    $filterParams[] = $statusFilter;
+    switch ($statusFilter) {
+        case 'goedgekeurd':
+            // Goedgekeurd = toekomstige reservering (nog niet gestart)
+            $statusWhere = " AND r.PRINT_START > ?";
+            $filterParams[] = $now;
+            break;
+        case 'afgerond':
+            // Afgerond = voorbije reservering
+            $statusWhere = " AND r.PRINT_END < ?";
+            $filterParams[] = $now;
+            break;
+        case 'wachtend':
+            // Wachtend = huidige reservering (nu bezig)
+            $statusWhere = " AND r.PRINT_START <= ? AND r.PRINT_END >= ?";
+            $filterParams[] = $now;
+            $filterParams[] = $now;
+            break;
+        // Afgewezen en geannuleerd kunnen we niet afleiden uit de datums
+        // We kunnen deze eventueel een andere logica geven of weglaten
+    }
+}
+
+// Filter op HulpNodig
+if ($helpNeededFilter !== -1) {
+    $statusWhere .= " AND r.HulpNodig = ?";
+    $filterParams[] = $helpNeededFilter;
+}
+
+// Filter op BeheerderPrinten
+if ($adminPrintFilter !== -1) {
+    $statusWhere .= " AND r.BeheerderPrinten = ?";
+    $filterParams[] = $adminPrintFilter;
 }
 
 // Paginering
@@ -55,7 +89,8 @@ $offset = ($page - 1) * $perPage;
 
 // Totaal aantal reserveringen voor paginering
 try {
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM Reservatie WHERE User_ID = ?" . $statusWhere);
+    $countQuery = "SELECT COUNT(*) as total FROM Reservatie r WHERE r.User_ID = ?" . $statusWhere;
+    $stmt = $conn->prepare($countQuery);
     $stmt->execute($filterParams);
     $totalReservations = $stmt->fetch()['total'];
     $totalPages = ceil($totalReservations / $perPage);
@@ -67,14 +102,14 @@ try {
 
 // Reserveringen ophalen
 try {
-    $stmt = $conn->prepare(
-        "SELECT r.*, p.Naam as PrinterNaam 
-        FROM Reservatie r
-        LEFT JOIN Printer p ON r.Printer_ID = p.Printer_ID
-        WHERE r.User_ID = ?" . $statusWhere . "
-        ORDER BY r.$sortBy $sortOrder
-        LIMIT $perPage OFFSET $offset"
-    );
+    $query = "SELECT r.*, CONCAT('Printer ', p.Printer_ID) as PrinterNaam, p.Versie_Toestel 
+              FROM Reservatie r
+              LEFT JOIN Printer p ON r.Printer_ID = p.Printer_ID
+              WHERE r.User_ID = ?" . $statusWhere . "
+              ORDER BY r.$sortBy $sortOrder
+              LIMIT $perPage OFFSET $offset";
+    
+    $stmt = $conn->prepare($query);
     $stmt->execute($filterParams);
     $reservations = $stmt->fetchAll();
 } catch (PDOException $e) {
@@ -82,8 +117,9 @@ try {
     $reservations = [];
 }
 
-// Status ophalen voor filter dropdown
-$statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannuleerd'];
+// Status opties voor filter dropdown
+$statusOptions = ['goedgekeurd', 'afgerond', 'wachtend'];
+// We hebben afgewezen en geannuleerd weggelaten omdat we die niet kunnen afleiden uit de datums
 ?>
 
 <!DOCTYPE html>
@@ -141,6 +177,12 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                             <a class="nav-link" href="filaments.php">
                                 <i class="fas fa-layer-group me-2"></i>
                                 Filament
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="openingsuren.php">
+                                <i class="fas fa-clock me-2"></i>
+                                Openingsuren
                             </a>
                         </li>
                         <li class="nav-item">
@@ -244,32 +286,45 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                     <div class="card-body">
                         <form action="view_user_reservations.php" method="GET" class="row g-3">
                             <input type="hidden" name="id" value="<?php echo $userId; ?>">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="status" class="form-label">Filter op status</label>
                                 <select name="status" id="status" class="form-select" onchange="this.form.submit()">
-                                    <option value="">Alle statussen</option>
-                                    <?php foreach ($statusOptions as $option): ?>
-                                        <option value="<?php echo $option; ?>" <?php echo ($statusFilter == $option) ? 'selected' : ''; ?>>
-                                            <?php echo ucfirst($option); ?>
-                                        </option>
-                                    <?php endforeach; ?>
+                                    <option value="">Alle reserveringen</option>
+                                    <option value="goedgekeurd" <?php echo ($statusFilter == 'goedgekeurd') ? 'selected' : ''; ?>>Toekomstige reserveringen</option>
+                                    <option value="wachtend" <?php echo ($statusFilter == 'wachtend') ? 'selected' : ''; ?>>Huidige reserveringen</option>
+                                    <option value="afgerond" <?php echo ($statusFilter == 'afgerond') ? 'selected' : ''; ?>>Afgeronde reserveringen</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label for="help_needed" class="form-label">Hulp nodig</label>
+                                <select name="help_needed" id="help_needed" class="form-select" onchange="this.form.submit()">
+                                    <option value="-1">Alle reserveringen</option>
+                                    <option value="1" <?php echo ($helpNeededFilter == 1) ? 'selected' : ''; ?>>Hulp nodig</option>
+                                    <option value="0" <?php echo ($helpNeededFilter === 0) ? 'selected' : ''; ?>>Geen hulp nodig</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="admin_print" class="form-label">Beheerder print</label>
+                                <select name="admin_print" id="admin_print" class="form-select" onchange="this.form.submit()">
+                                    <option value="-1">Alle reserveringen</option>
+                                    <option value="1" <?php echo ($adminPrintFilter == 1) ? 'selected' : ''; ?>>Beheerder print</option>
+                                    <option value="0" <?php echo ($adminPrintFilter === 0) ? 'selected' : ''; ?>>Zelf printen</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
                                 <label for="sort" class="form-label">Sorteer op</label>
-                                <select name="sort" id="sort" class="form-select" onchange="this.form.submit()">
-                                    <option value="StartTijd" <?php echo ($sortBy == 'StartTijd') ? 'selected' : ''; ?>>Startdatum</option>
-                                    <option value="EindTijd" <?php echo ($sortBy == 'EindTijd') ? 'selected' : ''; ?>>Einddatum</option>
-                                    <option value="Reservatie_ID" <?php echo ($sortBy == 'Reservatie_ID') ? 'selected' : ''; ?>>Reservatie ID</option>
-                                    <option value="Status" <?php echo ($sortBy == 'Status') ? 'selected' : ''; ?>>Status</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="order" class="form-label">Volgorde</label>
-                                <select name="order" id="order" class="form-select" onchange="this.form.submit()">
-                                    <option value="asc" <?php echo ($sortOrder == 'ASC') ? 'selected' : ''; ?>>Oplopend</option>
-                                    <option value="desc" <?php echo ($sortOrder == 'DESC') ? 'selected' : ''; ?>>Aflopend</option>
-                                </select>
+                                <div class="input-group">
+                                    <select name="sort" id="sort" class="form-select">
+                                        <option value="PRINT_START" <?php echo ($sortBy == 'PRINT_START') ? 'selected' : ''; ?>>Startdatum</option>
+                                        <option value="PRINT_END" <?php echo ($sortBy == 'PRINT_END') ? 'selected' : ''; ?>>Einddatum</option>
+                                        <option value="Reservatie_ID" <?php echo ($sortBy == 'Reservatie_ID') ? 'selected' : ''; ?>>Reservatie ID</option>
+                                    </select>
+                                    <select name="order" id="order" class="form-select">
+                                        <option value="asc" <?php echo ($sortOrder == 'ASC') ? 'selected' : ''; ?>>Oplopend</option>
+                                        <option value="desc" <?php echo ($sortOrder == 'DESC') ? 'selected' : ''; ?>>Aflopend</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary">Sorteer</button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -284,7 +339,7 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                     <div class="card-body">
                         <?php if (empty($reservations)): ?>
                             <div class="alert alert-info">
-                                Geen reserveringen gevonden voor deze gebruiker<?php echo !empty($statusFilter) ? ' met status ' . $statusFilter : ''; ?>.
+                                Geen reserveringen gevonden voor deze gebruiker<?php echo !empty($statusFilter) ? ' met de geselecteerde status' : ''; ?>.
                             </div>
                         <?php else: ?>
                             <div class="table-responsive">
@@ -296,50 +351,66 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                                             <th>Start</th>
                                             <th>Einde</th>
                                             <th>Status</th>
+                                            <th>Hulp</th>
+                                            <th>Beheerder Print</th>
                                             <th>Acties</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($reservations as $reservation): ?>
+                                        <?php foreach ($reservations as $reservation): 
+                                            // Bepaal de status gebaseerd op de datum
+                                            $now = new DateTime();
+                                            $startTime = new DateTime($reservation['PRINT_START']);
+                                            $endTime = new DateTime($reservation['PRINT_END']);
+                                            
+                                            $displayStatus = 'Onbekend';
+                                            $badgeClass = 'bg-light text-dark';
+                                            
+                                            if ($now > $endTime) {
+                                                $displayStatus = 'Afgerond';
+                                                $badgeClass = 'bg-info';
+                                            } elseif ($now >= $startTime && $now <= $endTime) {
+                                                $displayStatus = 'Huidig';
+                                                $badgeClass = 'bg-warning text-dark';
+                                            } elseif ($now < $startTime) {
+                                                $displayStatus = 'Toekomstig';
+                                                $badgeClass = 'bg-success';
+                                            }
+                                        ?>
                                             <tr>
                                                 <td><?php echo $reservation['Reservatie_ID']; ?></td>
-                                                <td><?php echo htmlspecialchars($reservation['PrinterNaam']); ?></td>
-                                                <td><?php echo date('d-m-Y H:i', strtotime($reservation['StartTijd'])); ?></td>
-                                                <td><?php echo date('d-m-Y H:i', strtotime($reservation['EindTijd'])); ?></td>
+                                                <td><?php echo htmlspecialchars($reservation['Versie_Toestel'] ?: $reservation['PrinterNaam']); ?></td>
+                                                <td><?php echo date('d-m-Y H:i', strtotime($reservation['PRINT_START'])); ?></td>
+                                                <td><?php echo date('d-m-Y H:i', strtotime($reservation['PRINT_END'])); ?></td>
                                                 <td>
-                                                    <?php
-                                                    switch ($reservation['Status']) {
-                                                        case 'goedgekeurd':
-                                                            echo '<span class="badge bg-success">Goedgekeurd</span>';
-                                                            break;
-                                                        case 'afgewezen':
-                                                            echo '<span class="badge bg-danger">Afgewezen</span>';
-                                                            break;
-                                                        case 'afgerond':
-                                                            echo '<span class="badge bg-info">Afgerond</span>';
-                                                            break;
-                                                        case 'wachtend':
-                                                            echo '<span class="badge bg-warning text-dark">Wachtend</span>';
-                                                            break;
-                                                        case 'geannuleerd':
-                                                            echo '<span class="badge bg-secondary">Geannuleerd</span>';
-                                                            break;
-                                                        default:
-                                                            echo '<span class="badge bg-light text-dark">Onbekend</span>';
-                                                    }
-                                                    ?>
+                                                    <span class="badge <?php echo $badgeClass; ?>"><?php echo $displayStatus; ?></span>
+                                                </td>
+                                                <td>
+                                                    <?php if (isset($reservation['HulpNodig']) && $reservation['HulpNodig'] == 1): ?>
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-hands-helping me-1"></i> Ja
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-secondary">Nee</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if (isset($reservation['BeheerderPrinten']) && $reservation['BeheerderPrinten'] == 1): ?>
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-print me-1"></i> Ja
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-secondary">Nee</span>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm">
-                                                        <a href="view_reservation.php?id=<?php echo $reservation['Reservatie_ID']; ?>" class="btn btn-info" title="Details bekijken">
+                                                        <a href="reservation-detail.php?id=<?php echo $reservation['Reservatie_ID']; ?>" class="btn btn-info" title="Details bekijken">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
-                                                        <?php if ($reservation['Status'] == 'wachtend'): ?>
-                                                            <a href="approve_reservation.php?id=<?php echo $reservation['Reservatie_ID']; ?>" class="btn btn-success" title="Goedkeuren">
-                                                                <i class="fas fa-check"></i>
-                                                            </a>
-                                                            <a href="reject_reservation.php?id=<?php echo $reservation['Reservatie_ID']; ?>" class="btn btn-danger" title="Afwijzen">
-                                                                <i class="fas fa-times"></i>
+                                                        <?php if ($now < $startTime): ?>
+                                                            <a href="reservation-detail.php?id=<?php echo $reservation['Reservatie_ID']; ?>&edit=true" class="btn btn-warning" title="Bewerken">
+                                                                <i class="fas fa-edit"></i>
                                                             </a>
                                                         <?php endif; ?>
                                                     </div>
@@ -357,7 +428,7 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                                 <ul class="pagination justify-content-center">
                                     <?php if ($page > 1): ?>
                                         <li class="page-item">
-                                            <a class="page-link" href="?id=<?php echo $userId; ?>&page=<?php echo $page - 1; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?><?php echo !empty($statusFilter) ? '&status=' . $statusFilter : ''; ?>">
+                                            <a class="page-link" href="?id=<?php echo $userId; ?>&page=<?php echo $page - 1; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?><?php echo !empty($statusFilter) ? '&status=' . $statusFilter : ''; ?><?php echo $helpNeededFilter != -1 ? '&help_needed=' . $helpNeededFilter : ''; ?><?php echo $adminPrintFilter != -1 ? '&admin_print=' . $adminPrintFilter : ''; ?>">
                                                 Vorige
                                             </a>
                                         </li>
@@ -384,7 +455,7 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                                     for ($i = $startPage; $i <= $endPage; $i++):
                                     ?>
                                         <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
-                                            <a class="page-link" href="?id=<?php echo $userId; ?>&page=<?php echo $i; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?><?php echo !empty($statusFilter) ? '&status=' . $statusFilter : ''; ?>">
+                                            <a class="page-link" href="?id=<?php echo $userId; ?>&page=<?php echo $i; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?><?php echo !empty($statusFilter) ? '&status=' . $statusFilter : ''; ?><?php echo $helpNeededFilter != -1 ? '&help_needed=' . $helpNeededFilter : ''; ?><?php echo $adminPrintFilter != -1 ? '&admin_print=' . $adminPrintFilter : ''; ?>">
                                                 <?php echo $i; ?>
                                             </a>
                                         </li>
@@ -392,7 +463,7 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                                     
                                     <?php if ($page < $totalPages): ?>
                                         <li class="page-item">
-                                            <a class="page-link" href="?id=<?php echo $userId; ?>&page=<?php echo $page + 1; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?><?php echo !empty($statusFilter) ? '&status=' . $statusFilter : ''; ?>">
+                                            <a class="page-link" href="?id=<?php echo $userId; ?>&page=<?php echo $page + 1; ?>&sort=<?php echo $sortBy; ?>&order=<?php echo $sortOrder; ?><?php echo !empty($statusFilter) ? '&status=' . $statusFilter : ''; ?><?php echo $helpNeededFilter != -1 ? '&help_needed=' . $helpNeededFilter : ''; ?><?php echo $adminPrintFilter != -1 ? '&admin_print=' . $adminPrintFilter : ''; ?>">
                                                 Volgende
                                             </a>
                                         </li>
@@ -416,29 +487,67 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                     <div class="card-body">
                         <div class="row">
                             <?php 
-                            // Status statistieken ophalen
+                            // Status statistieken berekenen op basis van datums
                             try {
+                                $now = date('Y-m-d H:i:s');
+                                
+                                // Toekomstige reserveringen (goedgekeurd)
                                 $stmt = $conn->prepare("
-                                    SELECT Status, COUNT(*) as count
+                                    SELECT COUNT(*) as count
                                     FROM Reservatie
-                                    WHERE User_ID = ?
-                                    GROUP BY Status
+                                    WHERE User_ID = ? AND PRINT_START > ?
+                                ");
+                                $stmt->execute([$userId, $now]);
+                                $futureCount = $stmt->fetch(PDO::FETCH_COLUMN);
+                                
+                                // Huidige reserveringen (wachtend)
+                                $stmt = $conn->prepare("
+                                    SELECT COUNT(*) as count
+                                    FROM Reservatie
+                                    WHERE User_ID = ? AND PRINT_START <= ? AND PRINT_END >= ?
+                                ");
+                                $stmt->execute([$userId, $now, $now]);
+                                $currentCount = $stmt->fetch(PDO::FETCH_COLUMN);
+                                
+                                // Afgeronde reserveringen
+                                $stmt = $conn->prepare("
+                                    SELECT COUNT(*) as count
+                                    FROM Reservatie
+                                    WHERE User_ID = ? AND PRINT_END < ?
+                                ");
+                                $stmt->execute([$userId, $now]);
+                                $pastCount = $stmt->fetch(PDO::FETCH_COLUMN);
+                                
+                                // Hulp nodig statistieken
+                                $stmt = $conn->prepare("
+                                    SELECT COUNT(*) as count
+                                    FROM Reservatie
+                                    WHERE User_ID = ? AND HulpNodig = 1
                                 ");
                                 $stmt->execute([$userId]);
-                                $statusStats = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+                                $helpNeededCount = $stmt->fetch(PDO::FETCH_COLUMN);
                                 
-                                // Aantal uren gereserveerd berekenen
+                                // Beheerder print statistieken
                                 $stmt = $conn->prepare("
-                                    SELECT SUM(TIMESTAMPDIFF(HOUR, StartTijd, EindTijd)) as total_hours
+                                    SELECT COUNT(*) as count
                                     FROM Reservatie
-                                    WHERE User_ID = ? AND Status IN ('goedgekeurd', 'afgerond')
+                                    WHERE User_ID = ? AND BeheerderPrinten = 1
+                                ");
+                                $stmt->execute([$userId]);
+                                $adminPrintCount = $stmt->fetch(PDO::FETCH_COLUMN);
+                                
+                                // Totaal aantal uren gereserveerd
+                                $stmt = $conn->prepare("
+                                    SELECT SUM(TIMESTAMPDIFF(HOUR, PRINT_START, PRINT_END)) as total_hours
+                                    FROM Reservatie
+                                    WHERE User_ID = ?
                                 ");
                                 $stmt->execute([$userId]);
                                 $totalHours = $stmt->fetch(PDO::FETCH_COLUMN);
                                 
                                 // Per printer statistieken
                                 $stmt = $conn->prepare("
-                                    SELECT p.Naam, COUNT(*) as count
+                                    SELECT p.Versie_Toestel, COUNT(*) as count
                                     FROM Reservatie r
                                     JOIN Printer p ON r.Printer_ID = p.Printer_ID
                                     WHERE r.User_ID = ?
@@ -450,13 +559,24 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                                 $printerStats = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
                                 
                             } catch (PDOException $e) {
-                                $statusStats = [];
+                                $futureCount = 0;
+                                $currentCount = 0;
+                                $pastCount = 0;
+                                $helpNeededCount = 0;
+                                $adminPrintCount = 0;
                                 $totalHours = 0;
                                 $printerStats = [];
                             }
+                            
+                            // Maak een status array voor de statistieken tabel
+                            $statusStats = [
+                                'Toekomstig' => $futureCount,
+                                'Huidig' => $currentCount,
+                                'Afgerond' => $pastCount
+                            ];
                             ?>
                             
-                            <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="col-xl-3 col-md-6 mb-4">
                                 <div class="card border-left-primary h-100 py-2">
                                     <div class="card-body">
                                         <div class="row no-gutters align-items-center">
@@ -473,7 +593,7 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                                 </div>
                             </div>
                             
-                            <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="col-xl-3 col-md-6 mb-4">
                                 <div class="card border-left-success h-100 py-2">
                                     <div class="card-body">
                                         <div class="row no-gutters align-items-center">
@@ -490,24 +610,34 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                                 </div>
                             </div>
                             
-                            <div class="col-xl-4 col-md-6 mb-4">
-                                <div class="card border-left-info h-100 py-2">
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card border-left-warning h-100 py-2">
                                     <div class="card-body">
                                         <div class="row no-gutters align-items-center">
                                             <div class="col mr-2">
-                                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                                    Goedkeuringspercentage</div>
-                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                    <?php 
-                                                    $approved = isset($statusStats['goedgekeurd']) ? $statusStats['goedgekeurd'] : 0;
-                                                    $completed = isset($statusStats['afgerond']) ? $statusStats['afgerond'] : 0;
-                                                    $total = $totalReservations ?: 1; // Voorkom delen door nul
-                                                    echo round((($approved + $completed) / $total) * 100) . '%';
-                                                    ?>
-                                                </div>
+                                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                    Aantal keer hulp nodig</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $helpNeededCount; ?></div>
                                             </div>
                                             <div class="col-auto">
-                                                <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                                                <i class="fas fa-hands-helping fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-xl-3 col-md-6 mb-4">
+                                <div class="card border-left-danger h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                                    Aantal keer beheerder print</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $adminPrintCount; ?></div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-print fa-2x text-gray-300"></i>
                                             </div>
                                         </div>
                                     </div>
@@ -518,49 +648,140 @@ $statusOptions = ['goedgekeurd', 'afgewezen', 'afgerond', 'wachtend', 'geannulee
                         <div class="row mt-4">
                             <div class="col-md-6">
                                 <h5>Status Verdeling</h5>
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Status</th>
-                                            <th>Aantal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($statusOptions as $status): ?>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
                                             <tr>
-                                                <td><?php echo ucfirst($status); ?></td>
-                                                <td><?php echo isset($statusStats[$status]) ? $statusStats[$status] : 0; ?></td>
+                                                <th>Status</th>
+                                                <th>Aantal</th>
+                                                <th>Percentage</th>
                                             </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            <?php 
+                                            foreach ($statusStats as $status => $count): 
+                                                $percentage = ($totalReservations > 0) ? round(($count / $totalReservations) * 100) : 0;
+                                            ?>
+                                                <tr>
+                                                    <td><?php echo $status; ?></td>
+                                                    <td><?php echo $count; ?></td>
+                                                    <td>
+                                                        <div class="progress">
+                                                            <div class="progress-bar" role="progressbar" style="width: <?php echo $percentage; ?>%;" 
+                                                                aria-valuenow="<?php echo $percentage; ?>" aria-valuemin="0" aria-valuemax="100">
+                                                                <?php echo $percentage; ?>%
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <h5 class="mt-4">Ondersteuning</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Aantal</th>
+                                                <th>Percentage</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="fas fa-hands-helping me-1"></i> Hulp nodig
+                                                    </span>
+                                                </td>
+                                                <td><?php echo $helpNeededCount; ?></td>
+                                                <td>
+                                                    <?php 
+                                                    $helpPercentage = ($totalReservations > 0) ? round(($helpNeededCount / $totalReservations) * 100) : 0;
+                                                    ?>
+                                                    <div class="progress">
+                                                        <div class="progress-bar bg-warning" role="progressbar" 
+                                                            style="width: <?php echo $helpPercentage; ?>%;" 
+                                                            aria-valuenow="<?php echo $helpPercentage; ?>" aria-valuemin="0" aria-valuemax="100">
+                                                            <?php echo $helpPercentage; ?>%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-print me-1"></i> Beheerder print
+                                                    </span>
+                                                </td>
+                                                <td><?php echo $adminPrintCount; ?></td>
+                                                <td>
+                                                    <?php 
+                                                    $printPercentage = ($totalReservations > 0) ? round(($adminPrintCount / $totalReservations) * 100) : 0;
+                                                    ?>
+                                                    <div class="progress">
+                                                        <div class="progress-bar bg-danger" role="progressbar" 
+                                                            style="width: <?php echo $printPercentage; ?>%;" 
+                                                            aria-valuenow="<?php echo $printPercentage; ?>" aria-valuemin="0" aria-valuemax="100">
+                                                            <?php echo $printPercentage; ?>%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <h5>Meest Gebruikte Printers</h5>
                                 <?php if (empty($printerStats)): ?>
                                     <p class="text-muted">Geen printergegevens beschikbaar.</p>
                                 <?php else: ?>
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Printer</th>
-                                                <th>Aantal reserveringen</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($printerStats as $printer => $count): ?>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
                                                 <tr>
-                                                    <td><?php echo htmlspecialchars($printer); ?></td>
-                                                    <td><?php echo $count; ?></td>
+                                                    <th>Printer</th>
+                                                    <th>Aantal reserveringen</th>
+                                                    <th>Percentage</th>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                <?php 
+                                                foreach ($printerStats as $printer => $count): 
+                                                    $percentage = ($totalReservations > 0) ? round(($count / $totalReservations) * 100) : 0;
+                                                ?>
+                                                    <tr>
+                                                        <td><?php echo htmlspecialchars($printer); ?></td>
+                                                        <td><?php echo $count; ?></td>
+                                                        <td>
+                                                            <div class="progress">
+                                                                <div class="progress-bar bg-info" role="progressbar" 
+                                                                    style="width: <?php echo $percentage; ?>%;" 
+                                                                    aria-valuenow="<?php echo $percentage; ?>" aria-valuemin="0" aria-valuemax="100">
+                                                                    <?php echo $percentage; ?>%
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Footer met laatste update info -->
+                <footer class="bg-light p-3 rounded text-center mt-4 mb-2">
+                    <small class="text-muted">Laatste update: <?php echo date('Y-m-d H:i:s'); ?></small>
+                    <br>
+                    <small class="text-muted">Ingelogd als: <?php echo htmlspecialchars($currentUser); ?></small>
+                </footer>
             </main>
         </div>
     </div>

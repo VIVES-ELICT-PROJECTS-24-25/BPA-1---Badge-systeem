@@ -39,10 +39,11 @@ CREATE TABLE User (
     Emailadres VARCHAR(255),
     Telefoon VARCHAR(50),
     Wachtwoord VARCHAR(255),
-    Type ENUM('student', 'onderzoeker', 'beheerder'),
+    Type ENUM('student', 'onderzoeker', 'beheerder', 'docent'),
     AanmaakAccount DATETIME,
     LaatsteAanmelding DATETIME,
-    HuidigActief BOOLEAN
+    HuidigActief BOOLEAN,
+    HulpNodig TINYINT
 );
 
 -- Tabel Vives
@@ -52,6 +53,7 @@ CREATE TABLE Vives (
     Vives_id VARCHAR(50),
     opleiding_id INT,
     Type ENUM('student', 'medewerker', 'onderzoeker'),
+    rfidkaatrnr VARCHAR(255),
     FOREIGN KEY (User_ID) REFERENCES User(User_ID),
     FOREIGN KEY (opleiding_id) REFERENCES opleidingen(id)
 );
@@ -66,7 +68,8 @@ CREATE TABLE Printer (
     Software ENUM('versie1', 'versie2', 'versie3'),
     Datadrager ENUM('SD', 'USB', 'WIFI'),
     Bouwvolume_id INT,
-    Opmerkingen TEXT
+    Opmerkingen TEXT,
+    foto TEXT
 );
 
 -- Tabel bouwvolume
@@ -96,7 +99,8 @@ CREATE TABLE Openingsuren (
 CREATE TABLE Filament (
     id INT PRIMARY KEY,
     Type ENUM('PLA', 'ABS', 'PETG', 'TPU', 'Nylon'),
-    Kleur ENUM('rood', 'blauw', 'groen', 'zwart', 'wit', 'geel', 'transparant')
+    Kleur ENUM('rood', 'blauw', 'groen', 'zwart', 'wit', 'geel', 'transparant'),
+    voorraad INT
 );
 
 -- Tabel Filament_compatibiliteit
@@ -120,10 +124,36 @@ CREATE TABLE Reservatie (
     Pincode VARCHAR(10),
     filament_id INT,
     verbruik FLOAT,
+    HulpNodig TINYINT,
+    BeheerderPrinten TINYINT,
     FOREIGN KEY (User_ID) REFERENCES User(User_ID),
     FOREIGN KEY (Printer_ID) REFERENCES Printer(Printer_ID),
     FOREIGN KEY (filament_id) REFERENCES Filament(id)
 );
+
+-- Tabel Onderzoeker_Goedkeuring
+CREATE TABLE `Onderzoeker_Goedkeuring` (
+  `User_ID` int NOT NULL,
+  `Goedgekeurd` tinyint(1) DEFAULT '0',
+  `AanvraagDatum` datetime DEFAULT NULL,
+  `GoedkeuringsDatum` datetime DEFAULT NULL,
+  `GoedgekeurdDoor` int DEFAULT NULL,
+  `Goedkeuringstoken` varchar(255) NOT NULL
+); 
+
+ALTER TABLE `Onderzoeker_Goedkeuring`
+  ADD PRIMARY KEY (`User_ID`),
+  ADD KEY `GoedgekeurdDoor` (`GoedgekeurdDoor`);
+
+-- Tabel voor wachtwoord reset tokens
+CREATE TABLE password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+
 
 -- Foreign key relaties toevoegen
 ALTER TABLE OPOs

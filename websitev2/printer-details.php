@@ -215,37 +215,58 @@ include 'includes/header.php';
                     <?php endif; ?>
                 </div>
             </div>
-            
-            <!-- Ondersteunde filamenten -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-layer-group me-2"></i> Beschikbare Filamenten</h5>
-                </div>
-                <div class="card-body">
-                    <?php if (empty($filaments)): ?>
-                        <div class="alert alert-info">Geen filament informatie beschikbaar.</div>
-                    <?php else: ?>
-                        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
-                            <?php foreach ($filaments as $filament): ?>
-                                <div class="col">
-                                    <div class="card h-100 border-0 shadow-sm">
-                                        <div class="card-body p-3">
-                                            <div class="d-flex align-items-center">
-                                                <div class="me-3" style="width: 20px; height: 20px; background-color: <?php echo htmlspecialchars($filament['Kleurcode'] ?? '#CCCCCC'); ?>; border-radius: 50%;"></div>
-                                                <div>
-                                                    <h6 class="mb-0"><?php echo htmlspecialchars($filament['Type']); ?></h6>
-                                                    <small class="text-muted"><?php echo htmlspecialchars($filament['Kleur']); ?></small>
-                                                </div>
-                                            </div>
-                                        </div>
+<!-- Ondersteunde filamenten -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-layer-group me-2"></i> Beschikbare Filamenten</h5>
+    </div>
+    <div class="card-body">
+        <?php if (empty($filaments)): ?>
+            <div class="alert alert-info">Geen filament informatie beschikbaar.</div>
+        <?php else: ?>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                <?php foreach ($filaments as $filament): ?>
+                    <?php 
+                    // Convert color name to hex code
+                    $colorCode = '#CCCCCC'; // Default gray
+                    
+                    // Convert common color names to hex codes
+                    $colorName = strtolower($filament['Kleur']);
+                    switch ($colorName) {
+                        case 'rood': case 'red': $colorCode = '#FF0000'; break;
+                        case 'blauw': case 'blue': $colorCode = '#0000FF'; break;
+                        case 'groen': case 'green': $colorCode = '#00FF00'; break;
+                        case 'zwart': case 'black': $colorCode = '#000000'; break;
+                        case 'wit': case 'white': $colorCode = '#FFFFFF'; break;
+                        case 'geel': case 'yellow': $colorCode = '#FFFF00'; break;
+                        case 'oranje': case 'orange': $colorCode = '#FFA500'; break;
+                        case 'paars': case 'purple': $colorCode = '#800080'; break;
+                        case 'roze': case 'pink': $colorCode = '#FFC0CB'; break;
+                        case 'hout': case 'wood': case 'bruin': case 'brown': $colorCode = '#8B4513'; break;
+                        case 'zilver': case 'silver': case 'grijs': case 'gray': $colorCode = '#C0C0C0'; break;
+                        case 'goud': case 'gold': $colorCode = '#FFD700'; break;
+                        case 'transparant': case 'transparent': case 'clear': $colorCode = '#E6F7FF'; break;
+                        // Add more colors as needed
+                    }
+                    ?>
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body p-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3" style="width: 24px; height: 24px; background-color: <?php echo $colorCode; ?>; border-radius: 50%; border: 1px solid #ddd;"></div>
+                                    <div>
+                                        <h6 class="mb-0"><?php echo htmlspecialchars($filament['Type']); ?></h6>
+                                        <small class="text-muted"><?php echo htmlspecialchars($filament['Kleur']); ?></small>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
+                            </div>
                         </div>
-                    <?php endif; ?>
-                </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
-            
+        <?php endif; ?>
+    </div>
+</div>            
             <!-- Extra informatie -->
             <div class="card">
                 <div class="card-header">

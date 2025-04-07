@@ -153,12 +153,12 @@ function getCalendarReservations() {
     $start = isset($_GET['start']) ? $_GET['start'] : date('Y-m-d');
     $end = isset($_GET['end']) ? $_GET['end'] : date('Y-m-d', strtotime('+30 days'));
     
+    // MODIFIED: Removed user information from the query
     $stmt = $conn->prepare("
-        SELECT r.Reservatie_ID, r.Printer_ID, r.User_ID, r.PRINT_START, r.PRINT_END,
-               p.Versie_Toestel, u.Voornaam, u.Naam
+        SELECT r.Reservatie_ID, r.Printer_ID, r.PRINT_START, r.PRINT_END,
+               p.Versie_Toestel
         FROM Reservatie r
         JOIN Printer p ON r.Printer_ID = p.Printer_ID
-        JOIN User u ON r.User_ID = u.User_ID
         WHERE DATE(r.PRINT_START) >= ? AND DATE(r.PRINT_END) <= ?
         ORDER BY r.PRINT_START
     ");
@@ -166,12 +166,12 @@ function getCalendarReservations() {
     $stmt->execute([$start, $end]);
     $reservations = $stmt->fetchAll();
     
-    // Voor kalender formatteren
+    // MODIFIED: Only include printer name and reservation ID in title, no user info
     $calendarEvents = [];
     foreach ($reservations as $reservation) {
         $calendarEvents[] = [
             'id' => $reservation['Reservatie_ID'],
-            'title' => $reservation['Versie_Toestel'] . ' - ' . $reservation['Voornaam'] . ' ' . $reservation['Naam'],
+            'title' => $reservation['Versie_Toestel'] . ' (Res. #' . $reservation['Reservatie_ID'] . ')',
             'start' => $reservation['PRINT_START'],
             'end' => $reservation['PRINT_END'],
             'resourceId' => $reservation['Printer_ID']

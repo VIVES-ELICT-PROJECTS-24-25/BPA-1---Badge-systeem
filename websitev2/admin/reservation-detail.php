@@ -141,6 +141,8 @@ if (isset($_POST['update_reservation'])) {
         $filamentId = !empty($_POST['filament_id']) ? intval($_POST['filament_id']) : null;
         $comment = $_POST['comment'] ?? '';
         $verbruik = !empty($_POST['verbruik']) ? floatval($_POST['verbruik']) : null;
+        $hulpNodig = isset($_POST['help_needed']) ? 1 : 0;
+        $beheerderPrinten = isset($_POST['admin_print']) ? 1 : 0;
         
         // Validatie
         if (strtotime($printEnd) <= strtotime($printStart)) {
@@ -204,7 +206,8 @@ if (isset($_POST['update_reservation'])) {
                 $stmt = $conn->prepare("
                     UPDATE Reservatie
                     SET PRINT_START = ?, PRINT_END = ?, Printer_ID = ?,
-                        filament_id = ?, Comment = ?, verbruik = ?
+                        filament_id = ?, Comment = ?, verbruik = ?,
+                        HulpNodig = ?, BeheerderPrinten = ?
                     WHERE Reservatie_ID = ?
                 ");
                 $stmt->execute([
@@ -214,6 +217,8 @@ if (isset($_POST['update_reservation'])) {
                     $filamentId,
                     $comment,
                     $verbruik,
+                    $hulpNodig,
+                    $beheerderPrinten,
                     $reservationId
                 ]);
                 
@@ -381,6 +386,12 @@ if (isset($_GET['success']) && $_GET['success'] == 'updated') {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="openingsuren.php">
+                                <i class="fas fa-clock me-2"></i>
+                                Openingsuren
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="../index.php">
                                 <i class="fas fa-home me-2"></i>
                                 Terug naar site
@@ -483,6 +494,41 @@ if (isset($_GET['success']) && $_GET['success'] == 'updated') {
                                     </div>
                                 </div>
                                 
+                                <!-- Hulp en beheerder options sectie -->
+                                <div class="mb-4">
+                                    <h6>Ondersteuning</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="alert <?php echo (isset($reservation['HulpNodig']) && $reservation['HulpNodig'] == 1) ? 'alert-warning' : 'alert-secondary'; ?>">
+                                                <strong>Hulp nodig:</strong> 
+                                                <?php if (isset($reservation['HulpNodig']) && $reservation['HulpNodig'] == 1): ?>
+                                                    <span class="text-warning">
+                                                        <i class="fas fa-hands-helping"></i> Ja
+                                                    </span>
+                                                    <p class="small mb-0 mt-2">Gebruiker heeft aangegeven hulp nodig te hebben met het printen.</p>
+                                                <?php else: ?>
+                                                    <span>Nee</span>
+                                                    <p class="small mb-0 mt-2">Gebruiker kan zelfstandig printen.</p>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="alert <?php echo (isset($reservation['BeheerderPrinten']) && $reservation['BeheerderPrinten'] == 1) ? 'alert-danger' : 'alert-secondary'; ?>">
+                                                <strong>Beheerder printen:</strong> 
+                                                <?php if (isset($reservation['BeheerderPrinten']) && $reservation['BeheerderPrinten'] == 1): ?>
+                                                    <span class="text-danger">
+                                                        <i class="fas fa-print"></i> Ja
+                                                    </span>
+                                                    <p class="small mb-0 mt-2">Beheerder moet de print uitvoeren voor de gebruiker.</p>
+                                                <?php else: ?>
+                                                    <span>Nee</span>
+                                                    <p class="small mb-0 mt-2">Gebruiker voert zelf de print uit.</p>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <!-- Pincode sectie -->
                                 <div class="mb-4">
                                     <h6>Toegangscode</h6>
@@ -569,6 +615,30 @@ if (isset($_GET['success']) && $_GET['success'] == 'updated') {
                                         </div>
                                     </div>
                                     
+                                    <!-- Hulp en beheerder options in edit mode -->
+                                    <div class="row mb-4">
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" role="switch" 
+                                                      id="help_needed" name="help_needed" 
+                                                      <?php echo (isset($reservation['HulpNodig']) && $reservation['HulpNodig'] == 1) ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="help_needed">
+                                                    <i class="fas fa-hands-helping text-warning me-1"></i> Hulp nodig bij printen
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" role="switch" 
+                                                      id="admin_print" name="admin_print" 
+                                                      <?php echo (isset($reservation['BeheerderPrinten']) && $reservation['BeheerderPrinten'] == 1) ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="admin_print">
+                                                    <i class="fas fa-print text-danger me-1"></i> Beheerder moet printen
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mb-4">
                                         <h6>Pincode</h6>
                                         <div class="alert alert-secondary">
@@ -647,7 +717,8 @@ if (isset($_GET['success']) && $_GET['success'] == 'updated') {
                                 // Haal andere reserveringen van deze gebruiker op
                                 try {
                                     $stmt = $conn->prepare("
-                                        SELECT r.Reservatie_ID, r.PRINT_START, r.PRINT_END, p.Versie_Toestel 
+                                        SELECT r.Reservatie_ID, r.PRINT_START, r.PRINT_END, p.Versie_Toestel,
+                                               r.HulpNodig, r.BeheerderPrinten 
                                         FROM Reservatie r
                                         JOIN Printer p ON r.Printer_ID = p.Printer_ID
                                         WHERE r.User_ID = ? AND r.Reservatie_ID != ?
@@ -665,7 +736,15 @@ if (isset($_GET['success']) && $_GET['success'] == 'updated') {
                                         <?php foreach ($otherReservations as $otherRes): ?>
                                             <a href="reservation-detail.php?id=<?php echo $otherRes['Reservatie_ID']; ?>" class="list-group-item list-group-item-action">
                                                 <div class="d-flex w-100 justify-content-between">
-                                                    <span><?php echo htmlspecialchars($otherRes['Versie_Toestel']); ?></span>
+                                                    <span>
+                                                        <?php echo htmlspecialchars($otherRes['Versie_Toestel']); ?>
+                                                        <?php if (isset($otherRes['HulpNodig']) && $otherRes['HulpNodig'] == 1): ?>
+                                                            <i class="fas fa-hands-helping text-warning" title="Hulp nodig"></i>
+                                                        <?php endif; ?>
+                                                        <?php if (isset($otherRes['BeheerderPrinten']) && $otherRes['BeheerderPrinten'] == 1): ?>
+                                                            <i class="fas fa-print text-danger" title="Beheerder print"></i>
+                                                        <?php endif; ?>
+                                                    </span>
                                                     <small>#<?php echo $otherRes['Reservatie_ID']; ?></small>
                                                 </div>
                                                 <small>
@@ -702,7 +781,7 @@ if (isset($_GET['success']) && $_GET['success'] == 'updated') {
                                     try {
                                         $stmt = $conn->prepare("
                                             SELECT r.Reservatie_ID, r.PRINT_START, r.PRINT_END, 
-                                                  u.Voornaam, u.Naam
+                                                  u.Voornaam, u.Naam, r.HulpNodig, r.BeheerderPrinten
                                             FROM Reservatie r
                                             JOIN User u ON r.User_ID = u.User_ID
                                             WHERE r.Printer_ID = ? AND r.Reservatie_ID != ?
@@ -719,7 +798,15 @@ if (isset($_GET['success']) && $_GET['success'] == 'updated') {
                                         <?php foreach ($printerReservations as $printerRes): ?>
                                             <a href="reservation-detail.php?id=<?php echo $printerRes['Reservatie_ID']; ?>" class="list-group-item list-group-item-action">
                                                 <div class="d-flex w-100 justify-content-between">
-                                                    <span><?php echo htmlspecialchars($printerRes['Voornaam'] . ' ' . $printerRes['Naam']); ?></span>
+                                                    <span>
+                                                        <?php echo htmlspecialchars($printerRes['Voornaam'] . ' ' . $printerRes['Naam']); ?>
+                                                        <?php if (isset($printerRes['HulpNodig']) && $printerRes['HulpNodig'] == 1): ?>
+                                                            <i class="fas fa-hands-helping text-warning" title="Hulp nodig"></i>
+                                                        <?php endif; ?>
+                                                        <?php if (isset($printerRes['BeheerderPrinten']) && $printerRes['BeheerderPrinten'] == 1): ?>
+                                                            <i class="fas fa-print text-danger" title="Beheerder print"></i>
+                                                        <?php endif; ?>
+                                                    </span>
                                                     <small>#<?php echo $printerRes['Reservatie_ID']; ?></small>
                                                 </div>
                                                 <small>
@@ -746,6 +833,48 @@ if (isset($_GET['success']) && $_GET['success'] == 'updated') {
                                 </a>
                             </div>
                         </div>
+
+                        <!-- Acties voor hulp en printopdrachten -->
+                        <?php if (isset($reservation['HulpNodig']) && $reservation['HulpNodig'] == 1 || 
+                                 isset($reservation['BeheerderPrinten']) && $reservation['BeheerderPrinten'] == 1): ?>
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0">Vereiste Acties</h5>
+                            </div>
+                            <div class="card-body">
+                                <?php if (isset($reservation['HulpNodig']) && $reservation['HulpNodig'] == 1): ?>
+                                <div class="alert alert-warning mb-3">
+                                    <h6 class="alert-heading"><i class="fas fa-hands-helping me-2"></i>Hulp Nodig</h6>
+                                    <p class="small">Deze gebruiker heeft aangegeven hulp nodig te hebben bij het printen.</p>
+                                    <hr>
+                                    <p class="mb-0">
+                                        <a href="mailto:<?php echo htmlspecialchars($reservation['Emailadres']); ?>?subject=Hulp%20bij%203D%20Print%20Reservering%20%23<?php echo $reservation['Reservatie_ID']; ?>" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-envelope me-1"></i> Contact opnemen over hulp
+                                        </a>
+                                    </p>
+                                </div>
+                                <?php endif; ?>
+
+                                <?php if (isset($reservation['BeheerderPrinten']) && $reservation['BeheerderPrinten'] == 1): ?>
+                                <div class="alert alert-danger mb-3">
+                                    <h6 class="alert-heading"><i class="fas fa-print me-2"></i>Printopdracht</h6>
+                                    <p class="small">Deze reservering vereist dat een beheerder de print uitvoert.</p>
+                                    <hr>
+                                    <p class="mb-0">
+                                        <a href="mailto:<?php echo htmlspecialchars($reservation['Emailadres']); ?>?subject=Printopdracht%20voor%20Reservering%20%23<?php echo $reservation['Reservatie_ID']; ?>" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-envelope me-1"></i> Contact opnemen over printopdracht
+                                        </a>
+                                    </p>
+                                </div>
+                                <?php endif; ?>
+
+                                <div class="alert alert-light">
+                                    <span class="small">Laatst gewijzigd door: <strong><?php echo htmlspecialchars($currentUser); ?></strong></span><br>
+                                    <span class="small">Huidige datum/tijd: <strong><?php echo date('Y-m-d H:i:s'); ?></strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </main>

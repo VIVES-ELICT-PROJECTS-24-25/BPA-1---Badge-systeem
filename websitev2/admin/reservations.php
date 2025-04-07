@@ -46,6 +46,8 @@ $filter = $_GET['filter'] ?? 'all';
 $date = $_GET['date'] ?? '';
 $user = isset($_GET['user']) ? (int)$_GET['user'] : 0;
 $printer = isset($_GET['printer']) ? (int)$_GET['printer'] : 0;
+$help_needed = isset($_GET['help_needed']) ? (int)$_GET['help_needed'] : -1;
+$admin_print = isset($_GET['admin_print']) ? (int)$_GET['admin_print'] : -1;
 
 // Basis query opbouwen
 $query = "
@@ -91,6 +93,20 @@ if ($user > 0) {
 if ($printer > 0) {
     $query .= " AND r.Printer_ID = ?";
     $params[] = $printer;
+}
+
+// Filter op HulpNodig
+if ($help_needed === 1) {
+    $query .= " AND r.HulpNodig = 1";
+} elseif ($help_needed === 0) {
+    $query .= " AND (r.HulpNodig = 0 OR r.HulpNodig IS NULL)";
+}
+
+// Filter op BeheerderPrinten
+if ($admin_print === 1) {
+    $query .= " AND r.BeheerderPrinten = 1";
+} elseif ($admin_print === 0) {
+    $query .= " AND (r.BeheerderPrinten = 0 OR r.BeheerderPrinten IS NULL)";
 }
 
 // Sorteren
@@ -181,6 +197,12 @@ try {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="openingsuren.php">
+                                <i class="fas fa-clock me-2"></i>
+                                Openingsuren
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="../index.php">
                                 <i class="fas fa-home me-2"></i>
                                 Terug naar site
@@ -259,6 +281,26 @@ try {
                                     <?php endforeach; ?>
                                 </select>
                             </div>
+                            
+                            <!-- Nieuwe filters voor hulp en beheerder printen -->
+                            <div class="col-md-3">
+                                <label for="help_needed" class="form-label">Hulp nodig</label>
+                                <select class="form-select" id="help_needed" name="help_needed">
+                                    <option value="-1" <?php echo $help_needed === -1 ? 'selected' : ''; ?>>Alle reserveringen</option>
+                                    <option value="1" <?php echo $help_needed === 1 ? 'selected' : ''; ?>>Ja, hulp nodig</option>
+                                    <option value="0" <?php echo $help_needed === 0 ? 'selected' : ''; ?>>Nee, geen hulp nodig</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label for="admin_print" class="form-label">Beheerder print</label>
+                                <select class="form-select" id="admin_print" name="admin_print">
+                                    <option value="-1" <?php echo $admin_print === -1 ? 'selected' : ''; ?>>Alle reserveringen</option>
+                                    <option value="1" <?php echo $admin_print === 1 ? 'selected' : ''; ?>>Ja, beheerder moet printen</option>
+                                    <option value="0" <?php echo $admin_print === 0 ? 'selected' : ''; ?>>Nee, zelf printen</option>
+                                </select>
+                            </div>
+                            
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Filter toepassen</button>
                                 <a href="reservations.php" class="btn btn-outline-secondary">Filters wissen</a>
@@ -287,7 +329,8 @@ try {
                                             <th>Printer</th>
                                             <th>Start tijd</th>
                                             <th>Eind tijd</th>
-                                            <th>Aangemaakt op</th>
+                                            <th>Hulp nodig</th>
+                                            <th>Beheerder print</th>
                                             <th>Filament</th>
                                             <th>Pincode</th>
                                             <th>Acties</th>
@@ -308,6 +351,14 @@ try {
                                                 $rowClass = 'table-info'; // Aankomend
                                             } elseif ($endTime < $now) {
                                                 $rowClass = 'table-secondary'; // Voorbij
+                                            }
+                                            
+                                            // Markeer rijen met hulp of beheerder printen
+                                            if (isset($reservering['HulpNodig']) && $reservering['HulpNodig'] == 1) {
+                                                $rowClass .= ' border-warning';
+                                            }
+                                            if (isset($reservering['BeheerderPrinten']) && $reservering['BeheerderPrinten'] == 1) {
+                                                $rowClass .= ' border-danger';
                                             }
                                             ?>
                                             <tr class="<?php echo $rowClass; ?>">
@@ -331,7 +382,24 @@ try {
                                                 </td>
                                                 <td><?php echo date('d-m-Y H:i', strtotime($reservering['PRINT_START'])); ?></td>
                                                 <td><?php echo date('d-m-Y H:i', strtotime($reservering['PRINT_END'])); ?></td>
-                                                <td><?php echo date('d-m-Y H:i', strtotime($reservering['DATE_TIME_RESERVATIE'])); ?></td>
+                                                <td>
+                                                    <?php if (isset($reservering['HulpNodig']) && $reservering['HulpNodig'] == 1): ?>
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-hands-helping me-1"></i> Ja
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-secondary">Nee</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if (isset($reservering['BeheerderPrinten']) && $reservering['BeheerderPrinten'] == 1): ?>
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-print me-1"></i> Ja
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-secondary">Nee</span>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td>
                                                     <?php if (!empty($reservering['FilamentType'])): ?>
                                                         <?php echo htmlspecialchars($reservering['FilamentType'] . ' - ' . $reservering['FilamentKleur']); ?>
@@ -386,6 +454,22 @@ try {
                                 <div class="d-flex align-items-center mb-2">
                                     <div class="bg-secondary me-2" style="width: 20px; height: 20px;"></div>
                                     <span>Afgelopen reservering</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-warning text-dark me-2">
+                                        <i class="fas fa-hands-helping"></i> Ja
+                                    </span>
+                                    <span>Hulp nodig</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-danger me-2">
+                                        <i class="fas fa-print"></i> Ja
+                                    </span>
+                                    <span>Beheerder moet printen</span>
                                 </div>
                             </div>
                         </div>
