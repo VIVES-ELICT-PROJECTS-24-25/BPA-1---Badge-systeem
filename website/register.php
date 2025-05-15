@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$newUserId, $approvalToken]);
                     
                     // Bouw de goedkeuringslink
-                    $approvalLink = 'https://3dprintersmaaklabvives.be/28_03/adminv2/approve_researcher.php?user_id=' . $newUserId . '&token=' . $approvalToken;
+                    $approvalLink = 'https://3dprintersmaaklabvives.be/approve_researcher.php?user_id=' . $newUserId . '&token=' . $approvalToken;
                     
                     // PHPMailer implementatie voor onderzoeker registratie e-mail
                     try {

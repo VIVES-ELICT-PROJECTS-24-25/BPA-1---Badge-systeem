@@ -145,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class='content'>
                             <p>Beste gebruiker,</p>
                             <p>Klik op de volgende link om je wachtwoord te resetten:</p>
-                            <p><a href='http://3dprintersmaaklabvives.be/04_04/reset_password.php?token=$token'>Wachtwoord resetten</a></p>
+                            <p><a href='http://3dprintersmaaklabvives.be/reset_password.php?token=$token'>Wachtwoord resetten</a></p>
                             <p>Als je deze aanvraag niet hebt gedaan, negeer deze e-mail dan.</p>
                             <p>Met vriendelijke groet,<br>Het 3D Printer Reserveringssysteem Team</p>
                         </div>
