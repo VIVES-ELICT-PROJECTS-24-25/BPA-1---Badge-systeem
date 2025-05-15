@@ -1,0 +1,241 @@
+/* Standardized UI components for consistent appearance across the application */
+
+/* Standardized header styling */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0; 
+    border-bottom: 2px solid #007ac9; 
+    height: 70px; /* Slightly taller header */
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #fff;
+    position: relative;
+    max-width: 100% !important;
+    margin: 0 !important;
+}
+
+.logo {
+    padding-left: 15px;
+}
+
+.logo img {
+    height: 45px;
+    max-width: 100%;
+}
+
+.welcome-text {
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: #000000;
+    text-align: center;
+    flex: 1;
+    margin: 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* For non-login pages, hide the welcome text (except for login screens) */
+body:not(.login-page) .welcome-text {
+    visibility: hidden;
+}
+
+/* Utility class for centered text */
+.text-center {
+    text-align: center !important;
+    width: 100%;
+    display: block;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.clock-container {
+    text-align: right;
+    color: #000;
+    min-width: 120px;
+    padding-right: 15px;
+}
+
+#clock {
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+#date {
+    font-size: 0.8rem;
+}
+
+/* Standardized logout button */
+.logout-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background-color: #dc3545;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    min-width: 120px;
+    text-align: center;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.logout-btn i {
+    margin-right: 8px;
+}
+
+/* Standardized back button */
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background-color: #007ac9;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    min-width: 120px;
+    text-align: center;
+}
+
+.back-btn:hover {
+    background-color: #005a96;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.back-btn i {
+    margin-right: 8px;
+}
+
+/* Action buttons container */
+.action-buttons {
+    width: 100%;
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    box-sizing: border-box;
+    margin-top: 20px;
+}
+
+/* Admin dashboard buttons */
+.admin-options {
+    width: 100%;
+    max-width: 800px;
+    margin: 3.5rem auto; /* Increased top margin to move buttons lower */
+}
+
+/* Admin dashboard title */
+.admin-dashboard-title {
+    text-align: center;
+    margin: 2rem 0;
+    font-size: 2rem;
+    color: #007ac9;
+    font-weight: 600;
+    width: 100%;
+}
+
+/* Utility class for centered text */
+.text-center {
+    text-align: center;
+    width: 100%;
+}
+
+.login-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.login-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 2px solid #007ac9;
+    border-radius: 10px;
+    padding: 1.5rem;
+    width: 180px;
+    height: 180px;
+    text-decoration: none;
+    color: #000;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.login-btn:hover {
+    background-color: #007ac9;
+    color: white;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+}
+
+.login-btn i {
+    font-size: 3.5rem;
+    margin-bottom: 0.7rem;
+}
+
+.login-btn span {
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Responsive styles */
+@media (max-width: 800px) {
+    .login-btn {
+        padding: 1.2rem;
+        width: 150px;
+        height: 150px;
+    }
+    
+    .login-btn i {
+        font-size: 3rem;
+    }
+    
+    .login-btn span {
+        font-size: 1rem;
+    }
+    
+    .back-btn, .logout-btn {
+        padding: 8px 15px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 600px) {
+    .login-btn {
+        padding: 1rem;
+        width: 130px;
+        height: 130px;
+    }
+    
+    .login-btn i {
+        font-size: 2.5rem;
+    }
+    
+    .login-btn span {
+        font-size: 0.9rem;
+    }
+    
+    .back-btn, .logout-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}

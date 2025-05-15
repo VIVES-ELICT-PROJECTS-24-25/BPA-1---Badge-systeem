@@ -273,6 +273,12 @@ try {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="bouwvolumes.php">
+                                <i class="fas fa-cube me-2"></i>
+                                Bouwvolumes
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="reservations.php">
                                 <i class="fas fa-calendar-alt me-2"></i>
                                 Reserveringen
@@ -288,6 +294,18 @@ try {
                             <a class="nav-link" href="openingsuren.php">
                                 <i class="fas fa-clock me-2"></i>
                                 Openingsuren
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="opleidingen.php">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                Opleidingen
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="feedback.php">
+                                <i class="fas fa-comments me-2"></i>
+                                Feedback
                             </a>
                         </li>
                         <li class="nav-item">
@@ -520,12 +538,14 @@ try {
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="software" class="form-label">Software</label>
-                                <select class="form-select" id="software" name="software">
-                                    <option value="">Selecteer...</option>
-                                    <option value="versie1">Versie 1</option>
-                                    <option value="versie2">Versie 2</option>
-                                    <option value="versie3">Versie 3</option>
-                                </select>
+                                <input type="text" class="form-control" id="software" name="software" list="software-options">
+                                <datalist id="software-options">
+                                    <option value="Cura">
+                                    <option value="Preform">
+                                    <option value="Z suite">
+                                    <option value="Bambu Studio">
+                                    <option value="Prusa Slicer">
+                                </datalist>
                             </div>
                         </div>
                         
@@ -555,7 +575,8 @@ try {
                             <select class="form-select" id="filaments" name="filaments[]" multiple>
                                 <?php foreach ($filamenten as $filament): ?>
                                     <option value="<?php echo $filament['id']; ?>">
-                                        <?php echo $filament['Type'] . ' - ' . $filament['Kleur']; ?>
+                                        <?php echo $filament['Type'] . ' - ' . $filament['Kleur'] . ' (' . 
+                                                  (isset($filament['diameter']) ? $filament['diameter'] : '1.75') . ' mm)'; ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -611,12 +632,14 @@ try {
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="edit_software" class="form-label">Software</label>
-                                <select class="form-select" id="edit_software" name="software">
-                                    <option value="">Selecteer...</option>
-                                    <option value="versie1">Versie 1</option>
-                                    <option value="versie2">Versie 2</option>
-                                    <option value="versie3">Versie 3</option>
-                                </select>
+                                <input type="text" class="form-control" id="edit_software" name="software" list="edit-software-options">
+                                <datalist id="edit-software-options">
+                                    <option value="Cura">
+                                    <option value="Preform">
+                                    <option value="Z suite">
+                                    <option value="Bambu Studio">
+                                    <option value="Prusa Slicer">
+                                </datalist>
                             </div>
                         </div>
                         
@@ -646,7 +669,8 @@ try {
                             <select class="form-select" id="edit_filaments" name="filaments[]" multiple>
                                 <?php foreach ($filamenten as $filament): ?>
                                     <option value="<?php echo $filament['id']; ?>">
-                                        <?php echo $filament['Type'] . ' - ' . $filament['Kleur']; ?>
+                                        <?php echo $filament['Type'] . ' - ' . $filament['Kleur'] . ' (' . 
+                                                  (isset($filament['diameter']) ? $filament['diameter'] : '1.75') . ' mm)'; ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>

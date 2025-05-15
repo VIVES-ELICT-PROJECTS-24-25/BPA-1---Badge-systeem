@@ -37,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $bevestig_wachtwoord = $_POST['bevestig_wachtwoord'] ?? '';
     $vives_id = trim($_POST['vives_id'] ?? '');
     $opleiding_id = ($_POST['opleiding_id'] ?? '');
+    $akkoord_afspraken = isset($_POST['akkoord_afspraken']) ? 1 : 0;
     
     // Determine user type based on email domain
     if (str_ends_with($email, '@student.vives.be')) {
@@ -62,6 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Opleiding is verplicht voor studenten.';
     } elseif (($type == 'student' || $type == 'docent') && !preg_match('/^[RU]\d{7}$/', $vives_id)) {
         $error = 'VIVES ID moet het formaat R1234567 of U1234567 hebben.';
+    } elseif (!$akkoord_afspraken) {
+        $error = 'Je moet akkoord gaan met de afspraken voor gebruik van het 3D printer reserveringssysteem.';
     } else {
         // Controleer of e-mail al bestaat
         $stmt = $conn->prepare("SELECT User_ID FROM User WHERE Emailadres = ?");
@@ -85,8 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Gebruiker aanmaken (met HulpNodig standaard op 1)
                 $stmt = $conn->prepare("
                     INSERT INTO User (User_ID, Voornaam, Naam, Emailadres, Telefoon, Wachtwoord, 
-                                    Type, AanmaakAccount, LaatsteAanmelding, HuidigActief, HulpNodig)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 1, 1)
+                                    Type, AanmaakAccount, LaatsteAanmelding, HuidigActief, HulpNodig, Akkoord_Afspraken)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), 1, 1, ?)
                 ");
                 
                 $stmt->execute([
@@ -96,7 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $email,
                     $telefoon,
                     $hashedPassword,
-                    $type
+                    $type,
+                    $akkoord_afspraken
                 ]);
                 
                 // Als het een student of docent is, voeg toe aan Vives tabel
@@ -284,10 +288,7 @@ include 'includes/header.php';
                                        value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" 
                                        onchange="detectUserType()">
                                 <div class="form-text">
-                                    Dit e-mailadres wordt gebruikt om in te loggen en bepaalt je gebruikerstype: 
-                                    @student.vives.be voor studenten, 
-                                    @vives.be voor docenten, 
-                                    andere domeinen voor onderzoekers.
+                                Dit e-mailadres wordt gebruikt om in te loggen, gebruik hiervoor je Vives e-mailadres.
                                 </div>
                             </div>
                             
@@ -295,6 +296,7 @@ include 'includes/header.php';
                                 <label for="telefoon" class="form-label">Telefoonnummer</label>
                                 <input type="text" class="form-control" id="telefoon" name="telefoon"
                                        value="<?php echo isset($_POST['telefoon']) ? htmlspecialchars($_POST['telefoon']) : ''; ?>">
+                                <div class="form-text">Dit zal enkel gebruikt worden indien je dringend gecontacteerd moet worden.</div>
                             </div>
                             
                             <div id="vivesIdContainer" class="mb-3" style="display: none;">
@@ -302,7 +304,6 @@ include 'includes/header.php';
                                 <input type="text" class="form-control" id="vives_id" name="vives_id"
                                        value="<?php echo isset($_POST['vives_id']) ? htmlspecialchars($_POST['vives_id']) : ''; ?>"
                                        placeholder="Bijv. R1234567 of U1234567">
-                                <div class="form-text">R-nummer voor studenten, U-nummer voor docenten</div>
                             </div>
                             
                             <div id="opleidingContainer" class="mb-3" style="display: none;">
@@ -327,6 +328,13 @@ include 'includes/header.php';
                             <div class="mb-4">
                                 <label for="bevestig_wachtwoord" class="form-label">Bevestig wachtwoord *</label>
                                 <input type="password" class="form-control" id="bevestig_wachtwoord" name="bevestig_wachtwoord" required minlength="6">
+                            </div>
+                            
+                            <div class="mb-4 form-check">
+                                <input type="checkbox" class="form-check-input" id="akkoord_afspraken" name="akkoord_afspraken" required>
+                                <label class="form-check-label" for="akkoord_afspraken">
+                                    Ik ga akkoord met de <a href="afspraken_studenten.pdf" target="_blank">afspraken en voorwaarden</a> voor gebruik van het 3D printer reserveringssysteem *
+                                </label>
                             </div>
                             
                             <div id="userTypeInfo" class="alert alert-info mb-4" style="display: none;">

@@ -16,7 +16,7 @@ include 'includes/header.php';
 
 <div class="hero-section text-center">
     <div class="container">
-        <h1>Welkom bij het 3D Printer Reserveringssysteem</h1>
+        <h1>Welkom bij make@technology</h1>
         <p class="lead mb-4">Reserveer eenvoudig en snel een 3D printer voor jouw projecten.</p>
         <?php if (!isLoggedIn()): ?>
             <div class="mt-4">
@@ -35,29 +35,29 @@ include 'includes/header.php';
 <div class="container">
     <div class="row text-center mb-5">
         <div class="col-md-4 mb-4">
-            <div class="card feature-card h-100">
+            <a href="printers.php" class="card feature-card h-100 text-decoration-none">
                 <div class="card-body">
                     <div class="feature-icon">
                         <i class="fas fa-print"></i>
                     </div>
                     <h3 class="card-title">Diverse Printers</h3>
-                    <p class="card-text">Kies uit verschillende 3D printers met diverse specificaties voor jouw specifieke project.</p>
+                    <p class="card-text">Kies de geschikte 3D printers voor jouw project.</p>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-md-4 mb-4">
-            <div class="card feature-card h-100">
+            <a href="reserve.php" class="card feature-card h-100 text-decoration-none">
                 <div class="card-body">
                     <div class="feature-icon">
                         <i class="fas fa-calendar-alt"></i>
                     </div>
                     <h3 class="card-title">Eenvoudig Reserveren</h3>
-                    <p class="card-text">Bekijk beschikbaarheid en maak snel en eenvoudig een reservering voor jouw gewenste tijdslot.</p>
+                    <p class="card-text">Bekijk beschikbaarheid en maak snel en eenvoudig een reservering voor jouw project.</p>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-md-4 mb-4">
-            <div class="card feature-card h-100">
+            <a href="profile.php" class="card feature-card h-100 text-decoration-none">
                 <div class="card-body">
                     <div class="feature-icon">
                         <i class="fas fa-user-check"></i>
@@ -65,7 +65,7 @@ include 'includes/header.php';
                     <h3 class="card-title">Persoonlijk Dashboard</h3>
                     <p class="card-text">Beheer eenvoudig al je reserveringen en bekijk je geschiedenis in je persoonlijke account.</p>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -104,8 +104,8 @@ include 'includes/header.php';
 
     <div class="row mt-5">
         <div class="col-md-6">
-            <h2>Hoe het werkt</h2>
-            <ol class="mt-4">
+            <h2 class="text-dark">Hoe het werkt</h2>
+            <ol class="mt-4 text-dark">
                 <li class="mb-3">Maak een account aan of log in met je bestaande account.</li>
                 <li class="mb-3">Bekijk de beschikbare printers en hun specificaties.</li>
                 <li class="mb-3">Controleer de beschikbaarheid in de kalender.</li>

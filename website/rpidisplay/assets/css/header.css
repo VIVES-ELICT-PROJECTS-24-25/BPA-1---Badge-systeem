@@ -1,0 +1,90 @@
+/* Header styles */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.3rem 0; /* Remove left/right padding to make it full width */
+    border-bottom: 2px solid #007ac9; 
+    height: 60px;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #fff;
+    position: relative;
+    max-width: 100% !important; /* Force full width */
+    margin: 0 !important; /* Remove any margins */
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.logo {
+    padding-left: 15px; /* Add left margin to the logo */
+}
+
+.logo img {
+    height: 45px;
+    max-width: 100%;
+}
+
+/* Welcome text for middle of header */
+.welcome-text {
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: #000000;
+    text-align: center;
+    flex: 1;
+    margin: 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.clock-container {
+    text-align: right;
+    color: #000;
+    min-width: 120px;
+    padding-right: 15px; /* Add right margin to the clock */
+}
+
+#clock {
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+#date {
+    font-size: 0.8rem;
+}
+
+/* Override any conflicting styles from admin-controls.css */
+.container {
+    padding-top: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Force header to be fixed at the top of the page with full width */
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Ensure full width on all devices */
+@media (max-width: 768px) {
+    header {
+        height: 60px;
+        padding: 0.3rem 0;
+        flex-direction: row;
+        gap: 0;
+        margin: 0 !important;
+    }
+    
+    .logo {
+        padding-left: 10px; /* Smaller padding on mobile */
+    }
+    
+    .clock-container {
+        padding-right: 10px; /* Smaller padding on mobile */
+    }
+}

@@ -1,0 +1,36 @@
+/* scan-notifications.css - Styling for temporary scan notifications */
+
+.scan-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: rgba(0, 122, 201, 0.95);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-width: 300px;
+    font-size: 14px;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+    display: flex;
+    align-items: center;
+    animation: slide-in 0.3s ease-out;
+}
+
+.scan-notification i {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

@@ -186,9 +186,21 @@ $statusOptions = ['goedgekeurd', 'afgerond', 'wachtend'];
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="opleidingen.php">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                Opleidingen
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="../index.php">
                                 <i class="fas fa-home me-2"></i>
                                 Terug naar site
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="feedback.php">
+                                <i class="fas fa-comments me-2"></i>
+                                Feedback
                             </a>
                         </li>
                         <li class="nav-item">

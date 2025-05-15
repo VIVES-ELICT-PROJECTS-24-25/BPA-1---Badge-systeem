@@ -1,0 +1,19 @@
+@media (max-width: 768px) {
+    .login-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .login-btn {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .scanner-area {
+        flex-direction: column;
+    }
+    
+    .reservation-details {
+        grid-template-columns: 1fr;
+    }
+}

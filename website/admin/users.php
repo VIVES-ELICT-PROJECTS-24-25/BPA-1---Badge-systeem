@@ -214,6 +214,18 @@ try {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="opleidingen.php">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                Opleidingen
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="feedback.php">
+                                <i class="fas fa-comments me-2"></i>
+                                Feedback
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="../index.php">
                                 <i class="fas fa-home me-2"></i>
                                 Terug naar site
@@ -370,6 +382,9 @@ try {
                                                 </td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm">
+                                                        <a href="user_view.php?id=<?php echo $user['User_ID']; ?>" class="btn btn-secondary" title="Profiel bekijken">
+                                                            <i class="fas fa-user"></i>
+                                                        </a>
                                                         <a href="edit_user.php?id=<?php echo $user['User_ID']; ?>" class="btn btn-primary" title="Bewerken">
                                                             <i class="fas fa-edit"></i>
                                                         </a>

@@ -49,7 +49,7 @@ if (isset($_POST['submit_contact'])) {
             
             // Recipients
             $mailAdmin->setFrom('reservaties@3dprintersmaaklabvives.be', '3D Printers Maaklab VIVES');
-            $mailAdmin->addAddress('inschrijvingen@3dprintersmaaklabvives.be', 'Beheerder');
+            $mailAdmin->addAddress('info@3dprintersmaaklabvives.be', 'Beheerder');
             $mailAdmin->addReplyTo($email, $name);
             
             // Content
@@ -306,8 +306,7 @@ if (isset($_POST['submit_contact'])) {
                         
                         <div class="next-steps">
                             <h2>Wat kunt u verwachten?</h2>
-                            <p>Onze medewerkers streven ernaar om binnen 2 werkdagen te reageren op uw bericht. Heeft u dringende vragen? Dan kunt u ons ook telefonisch bereiken op +32 2 123 45 67 tijdens onze openingsuren:</p>
-                            <p><strong>Donderdag:</strong> 14:00 - 18:00</p>
+                            <p>Onze medewerkers streven ernaar om binnen 2 werkdagen te reageren op uw bericht.</p>
                         </div>
                         
                         <div class="timestamp">
@@ -335,8 +334,7 @@ if (isset($_POST['submit_contact'])) {
             $plainTextConfirmation .= "Onderwerp: " . $subject . "\n";
             $plainTextConfirmation .= "Bericht:\n" . $message . "\n\n";
             $plainTextConfirmation .= "WAT KUNT U VERWACHTEN?\n";
-            $plainTextConfirmation .= "Onze medewerkers streven ernaar om binnen 2 werkdagen te reageren op uw bericht. Heeft u dringende vragen? Dan kunt u ons ook telefonisch bereiken op +32 2 123 45 67 tijdens onze openingsuren:\n";
-            $plainTextConfirmation .= "Donderdag: 14:00 - 18:00\n\n";
+            $plainTextConfirmation .= "Onze medewerkers streven ernaar om binnen 2 werkdagen te reageren op uw bericht.\n";
             $plainTextConfirmation .= "Verzonden op: " . $currentDateTime . "\n\n";
             $plainTextConfirmation .= "Dit is een automatisch gegenereerde e-mail, u kunt deze e-mail niet beantwoorden.\n";
             $plainTextConfirmation .= "Bezoek onze website: https://3dprintersmaaklabvives.be\n\n";
@@ -412,9 +410,8 @@ include 'includes/header.php';
                 <div class="card-body">
                     <h5 class="card-title">Contactgegevens</h5>
                     <p><i class="fas fa-map-marker-alt me-2"></i> Universiteitslaan 2, 8500 Kortrijk</p>
-                    <p><i class="fas fa-phone me-2"></i> +32 2 123 45 67</p>
                     <p><i class="fas fa-envelope me-2"></i> info@3dprintersmaaklabvives.be</p>
-                    <p><i class="fas fa-clock me-2"></i> Donderdag: 14:00 - 18:00</p>
+ 		    <p><i class="fas fa-file-pdf me-2"></i> <a href="afspraken_studenten.pdf" target="_blank">Afspraken voor Studenten</a></p>
                 </div>
             </div>
             
@@ -477,5 +474,7 @@ include 'includes/header.php';
         </div>
     </div>
 </div>
+
+
 
 <?php include 'includes/footer.php'; ?>

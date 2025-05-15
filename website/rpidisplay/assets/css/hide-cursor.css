@@ -1,0 +1,41 @@
+/* 
+ * hide-cursor.css
+ * Verbergt de muiscursor en voorkomt tekstselectie op de volledige website
+ * Specifiek ontworpen voor touchscreen apparaten
+ *
+ * Deze CSS zorgt ervoor dat er op geen enkel element een cursor wordt weergegeven
+ * omdat de website alleen op touchscreen apparaten zonder muis wordt gebruikt.
+ * Ook voorkomt het de selectie van tekst en elementen voor een betere touchscreen ervaring.
+ * De !important flag zorgt ervoor dat deze stijlen niet overschreven kunnen worden.
+ */
+
+* {
+    cursor: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
+html, body, a, button, input, select, textarea {
+    cursor: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
+/* Verberg de cursor ook op hover states */
+*:hover {
+    cursor: none !important;
+}
+
+/* Voorkom dat de selectie-highlight verschijnt */
+::selection {
+    background: transparent !important;
+    color: inherit !important;
+}
+::-moz-selection {
+    background: transparent !important;
+    color: inherit !important;
+}

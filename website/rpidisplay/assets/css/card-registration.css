@@ -1,0 +1,157 @@
+/* Core layouts */
+html, body, .container {
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    overflow: auto;
+    height: 100%;
+}
+
+.container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+main {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 15px;
+    margin-top: 0;
+}
+
+/* Scanner styles */
+.scanner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Status message styling */
+.status-message {
+    width: 100%;
+    max-width: 500px;
+    padding: 0.8rem;
+    border-radius: 5px;
+    margin: 0.7rem 0;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.status-message.loading { background-color: #e3f2fd; color: #0070c0; }
+.status-message.success { background-color: #d4edda; color: #155724; }
+.status-message.error { background-color: #f8d7da; color: #721c24; }
+
+/* User info card styling */
+#user-info-container {
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.user-info-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 1rem 0;
+    width: 100%;
+}
+
+.user-info-header {
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.status-badge.registered,
+.status-badge.found,
+.status-badge.success { 
+    background-color: #28a745; 
+    color: white; 
+}
+
+.user-info-body {
+    padding: 20px;
+}
+
+.user-details {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -10px;
+}
+
+.detail-column {
+    flex: 1;
+    padding: 0 10px;
+    min-width: 250px;
+}
+
+.detail-row {
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-label {
+    font-weight: bold;
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    font-size: 18px;
+    color: #333;
+}
+
+.confirmation-message {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 15px;
+    border-left: 4px solid #007bff;
+    font-size: 16px;
+}
+
+.confirmation-message p {
+    margin: 0;
+    color: #495057;
+}
+
+/* Success message styling */
+.success-message {
+    text-align: center;
+    padding: 20px;
+}
+
+.success-message i {
+    font-size: 48px;
+    color: #28a745;
+    margin-bottom: 10px;
+}

@@ -1,0 +1,72 @@
+/* Action buttons at bottom - LARGER */
+.action-buttons {
+    width: 100%;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    box-sizing: border-box;
+    margin-top: 20px;
+}
+
+.back-btn, .logout-btn, .scan-new-card-btn, .confirm-button, .cancel-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    height: 46px;
+    min-width: 140px;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.back-btn {
+    background-color: #007bff;
+}
+
+.back-btn:hover {
+    background-color: #0069d9;
+}
+
+.logout-btn {
+    background-color: #dc3545;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
+}
+
+.scan-new-card-btn {
+    background-color: #28a745;
+}
+
+.scan-new-card-btn:hover {
+    background-color: #218838;
+}
+
+.confirm-button {
+    background-color: #28a745;
+}
+
+.confirm-button:hover {
+    background-color: #218838;
+}
+
+.cancel-button {
+    background-color: #6c757d;
+}
+
+.cancel-button:hover {
+    background-color: #5a6268;
+}
+
+.back-btn i, .logout-btn i, .scan-new-card-btn i, .confirm-button i, .cancel-button i {
+    margin-right: 8px;
+}

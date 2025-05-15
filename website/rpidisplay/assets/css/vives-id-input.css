@@ -1,0 +1,165 @@
+/* VIVES ID input styles */
+#vives-id-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.vives-id-input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 400px; /* Wider to fit 8 characters */
+    margin: 0 auto;
+}
+
+.vives-id-display {
+    width: 100%;
+    margin: 0.5rem 0;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+#vives-id-value {
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: 0.3rem;
+    color: #000000;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.prefix-placeholder {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #000000;
+}
+
+.prefix-placeholder.active {
+    color: #333;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.number-value {
+    margin-left: 5px;
+}
+
+.prefix-selection {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+.prefix-btn {
+    background-color: white;
+    border: 1px solid #ddd;
+    padding: 10px 20px;
+    margin: 0 10px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    width: 70px;
+    text-align: center;
+    color: #000;
+}
+
+.prefix-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.prefix-btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
+}
+
+.numeric-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    max-width: 350px;
+    margin: 5px auto;
+}
+
+.keypad-btn {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    height: 55px;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.keypad-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.keypad-btn:active {
+    background-color: #e6e6e6;
+}
+
+.clear-btn {
+    color: #dc3545;
+}
+
+.submit-btn {
+    color: #28a745;
+}
+
+.submit-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* User confirmation buttons */
+.cancel-btn, .confirm-btn, .action-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    height: 45px;  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+}
+
+.cancel-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.confirm-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #5a6268;
+}
+
+.confirm-btn:hover {
+    background-color: #218838;
+}

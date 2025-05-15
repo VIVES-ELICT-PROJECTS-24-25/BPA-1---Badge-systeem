@@ -1,0 +1,172 @@
+/* Code panel styles */
+html, body {
+    overflow: hidden;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Hide scrollbars in all browsers */
+::-webkit-scrollbar {
+    display: none;
+}
+
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.main-container {
+    max-height: 100vh;
+    overflow: hidden;
+}
+
+.code-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    max-width: 350px;
+    margin: 0 auto;
+    margin-top: 0;
+    padding-top: 3px;
+    padding-bottom: 80px;
+    overflow: hidden;
+}
+
+.code-display {
+    width: 100%;
+    margin: 0.5rem 0;
+    position: relative;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+}
+
+.code-dots {
+    display: none;
+}
+
+.code-value {
+    position: static;
+    visibility: visible;
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: 0.5rem;
+    color: #000000;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Blinking cursor for code input */
+.code-value:after {
+    content: '';
+    width: 2px;
+    height: 2rem;
+    background-color: #000000;
+    margin-left: 5px;
+    animation: blink 1s infinite;
+    display: inline-block;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+.numeric-keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 5px;
+}
+
+.keypad-btn {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    height: 55px;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.keypad-btn:hover {
+    background-color: #f0f0f0;
+    transform: translateY(-2px);
+}
+
+.keypad-btn:active {
+    transform: translateY(1px);
+    background-color: #e6e6e6;
+}
+
+.clear-btn {
+    color: #dc3545;
+}
+
+.submit-btn {
+    color: #28a745;
+}
+
+/* Status message styles */
+.code-container .status-message {
+    width: 100%;
+    padding: 0.6rem;
+    border-radius: 5px;
+    margin: 0.5rem 0;
+    text-align: center;
+}
+
+.code-container .status-message.loading {
+    background-color: #e3f2fd;
+    color: #0070c0;
+}
+
+.code-container .status-message.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.code-container .status-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Responsive styles */
+@media (max-width: 400px) {
+    .numeric-keypad {
+        gap: 6px;
+    }
+    
+    .keypad-btn {
+        height: 48px;
+        font-size: 1.3rem;
+    }
+    
+    .code-value {
+        font-size: 1.5rem;
+    }
+}
+
+/* Hide cursor when code is complete */
+.code-value.complete::after {
+    display: none;
+}
+
+/* Remove debug output */
+body::before {
+    content: "";
+    display: none;
+}

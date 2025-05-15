@@ -1,0 +1,122 @@
+/* Scanner container */
+.scanner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+    padding-bottom: 60px;
+}
+
+/* New wrapper for scanner with positioned arrow */
+.scanner-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 0.7rem auto;
+}
+
+.scanner-area {
+    width: 180px;
+    height: 180px;
+    background-color: #f0f0f0;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    /* Scanner stays centered */
+}
+
+.scanner-graphic {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scanner-graphic i {
+    font-size: 4rem;
+    color: #007ac9;
+    transition: color 0.3s ease;
+}
+
+/* Processing state - visual feedback when card is being processed */
+.scanner-container.processing .scanner-area {
+    background-color: #e8f4ff;
+    box-shadow: 0 0 15px rgba(0, 122, 201, 0.3);
+}
+
+.scanner-container.processing .scanner-graphic i,
+.scanner-area.verifying .scanner-graphic i {
+    color: #005b96;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Styling for verifying state */
+.scanner-area.verifying {
+    background-color: #e8f4ff;
+    box-shadow: 0 0 15px rgba(0, 122, 201, 0.3);
+    transition: all 0.3s ease;
+}
+
+/* Position the arrow to the right of the scanner box */
+.arrow-container {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Style for the right arrow */
+.arrow-container i.fa-arrow-right {
+    font-size: 4.5rem;
+    color: #007ac9;
+}
+
+/* Status message for scanner */
+.scanner-container .status-message {
+    width: 100%;
+    max-width: 350px;
+    margin: 0.7rem 0;
+    font-size: 0.9rem;
+}
+
+.scanner-container .status-message i {
+    font-size: 1.2rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .scanner-area {
+        width: 160px;
+        height: 160px;
+    }
+    
+    .scanner-graphic {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .scanner-graphic i {
+        font-size: 3.5rem;
+    }
+    
+    .arrow-container i.fa-arrow-right {
+        font-size: 4rem;
+    }
+}

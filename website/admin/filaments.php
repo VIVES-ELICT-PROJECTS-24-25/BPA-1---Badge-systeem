@@ -9,11 +9,29 @@ $currentPage = 'admin-filaments';
 $success = '';
 $error = '';
 
+// Functie om Nederlandse kleurnamen om te zetten naar CSS-kleuren
+function vertaalKleurNaarCSS($kleur) {
+    $kleurMapping = [
+        'rood' => 'red',
+        'blauw' => 'blue',
+        'groen' => 'green',
+        'zwart' => 'black',
+        'wit' => 'white',
+        'geel' => 'yellow',
+        'transparant' => 'transparent'
+        // Voeg meer kleuren toe indien nodig
+    ];
+    
+    $kleur = strtolower($kleur);
+    return $kleurMapping[$kleur] ?? 'gray'; // Standaard grijs als de kleur niet wordt herkend
+}
+
 // Filament toevoegen
 if (isset($_POST['add_filament'])) {
     $type = $_POST['type'] ?? '';
     $kleur = $_POST['kleur'] ?? '';
     $voorraad = isset($_POST['voorraad']) ? (float)$_POST['voorraad'] : 0;
+    $diameter = $_POST['diameter'] ?? '1.75'; // Default naar 1.75mm indien niet opgegeven
     
     if (empty($type) || empty($kleur)) {
         $error = 'Type en kleur zijn verplichte velden.';
@@ -25,10 +43,10 @@ if (isset($_POST['add_filament'])) {
             $newFilamentId = ($result['maxId'] ?? 0) + 1;
             
             $stmt = $conn->prepare("
-                INSERT INTO Filament (id, Type, Kleur, voorraad) 
-                VALUES (?, ?, ?, ?)
+                INSERT INTO Filament (id, Type, Kleur, voorraad, diameter) 
+                VALUES (?, ?, ?, ?, ?)
             ");
-            $stmt->execute([$newFilamentId, $type, $kleur, $voorraad]);
+            $stmt->execute([$newFilamentId, $type, $kleur, $voorraad, $diameter]);
             
             $success = 'Filament succesvol toegevoegd.';
         } catch (PDOException $e) {
@@ -43,6 +61,7 @@ if (isset($_POST['edit_filament'])) {
     $type = $_POST['type'] ?? '';
     $kleur = $_POST['kleur'] ?? '';
     $voorraad = isset($_POST['voorraad']) ? (float)$_POST['voorraad'] : 0;
+    $diameter = $_POST['diameter'] ?? '1.75'; // Default naar 1.75mm indien niet opgegeven
     
     if (empty($type) || empty($kleur)) {
         $error = 'Type en kleur zijn verplichte velden.';
@@ -50,10 +69,10 @@ if (isset($_POST['edit_filament'])) {
         try {
             $stmt = $conn->prepare("
                 UPDATE Filament 
-                SET Type = ?, Kleur = ?, voorraad = ? 
+                SET Type = ?, Kleur = ?, voorraad = ?, diameter = ? 
                 WHERE id = ?
             ");
-            $stmt->execute([$type, $kleur, $voorraad, $id]);
+            $stmt->execute([$type, $kleur, $voorraad, $diameter, $id]);
             
             $success = 'Filament succesvol bijgewerkt.';
         } catch (PDOException $e) {
@@ -178,6 +197,18 @@ try {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="opleidingen.php">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                Opleidingen
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="feedback.php">
+                                <i class="fas fa-comments me-2"></i>
+                                Feedback
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="../index.php">
                                 <i class="fas fa-home me-2"></i>
                                 Terug naar site
@@ -233,6 +264,7 @@ try {
                                             <th>ID</th>
                                             <th>Type</th>
                                             <th>Kleur</th>
+                                            <th>Diameter (mm)</th>
                                             <th>Voorraad (g)</th>
                                             <th>Acties</th>
                                         </tr>
@@ -243,9 +275,10 @@ try {
                                                 <td><?php echo $filament['id']; ?></td>
                                                 <td><?php echo htmlspecialchars($filament['Type']); ?></td>
                                                 <td>
-                                                    <span class="color-sample" style="display:inline-block; width:20px; height:20px; background-color:<?php echo strtolower($filament['Kleur']); ?>; border:1px solid #ddd; vertical-align:middle; margin-right:5px;"></span>
+                                                    <span class="color-sample" style="display:inline-block; width:20px; height:20px; background-color:<?php echo vertaalKleurNaarCSS($filament['Kleur']); ?>; border:1px solid #ddd; vertical-align:middle; margin-right:5px;"></span>
                                                     <?php echo htmlspecialchars($filament['Kleur']); ?>
                                                 </td>
+                                                <td><?php echo htmlspecialchars($filament['diameter'] ?? '1.75'); ?> mm</td>
                                                 <td>
                                                     <?php 
                                                     $voorraad = $filament['voorraad'] ?? 0;
@@ -288,7 +321,7 @@ try {
                                 <input type="hidden" name="id" value="<?php echo $editFilament['id']; ?>">
                                 
                                 <div class="row mb-3">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="edit-type" class="form-label">Type</label>
                                         <select class="form-select" id="edit-type" name="type" required>
                                             <option value="PLA" <?php echo $editFilament['Type'] == 'PLA' ? 'selected' : ''; ?>>PLA</option>
@@ -298,7 +331,7 @@ try {
                                             <option value="Nylon" <?php echo $editFilament['Type'] == 'Nylon' ? 'selected' : ''; ?>>Nylon</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label for="edit-kleur" class="form-label">Kleur</label>
                                         <select class="form-select" id="edit-kleur" name="kleur" required>
                                             <option value="rood" <?php echo $editFilament['Kleur'] == 'rood' ? 'selected' : ''; ?>>Rood</option>
@@ -308,6 +341,13 @@ try {
                                             <option value="wit" <?php echo $editFilament['Kleur'] == 'wit' ? 'selected' : ''; ?>>Wit</option>
                                             <option value="geel" <?php echo $editFilament['Kleur'] == 'geel' ? 'selected' : ''; ?>>Geel</option>
                                             <option value="transparant" <?php echo $editFilament['Kleur'] == 'transparant' ? 'selected' : ''; ?>>Transparant</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="edit-diameter" class="form-label">Diameter (mm)</label>
+                                        <select class="form-select" id="edit-diameter" name="diameter">
+                                            <option value="1.75" <?php echo (!isset($editFilament['diameter']) || $editFilament['diameter'] == '1.75') ? 'selected' : ''; ?>>1.75 mm</option>
+                                            <option value="2.85" <?php echo (isset($editFilament['diameter']) && $editFilament['diameter'] == '2.85') ? 'selected' : ''; ?>>2.85 mm</option>
                                         </select>
                                     </div>
                                 </div>
@@ -361,6 +401,13 @@ try {
                                 <option value="wit">Wit</option>
                                 <option value="geel">Geel</option>
                                 <option value="transparant">Transparant</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="diameter" class="form-label">Diameter (mm)</label>
+                            <select class="form-select" id="diameter" name="diameter">
+                                <option value="1.75" selected>1.75 mm</option>
+                                <option value="2.85">2.85 mm</option>
                             </select>
                         </div>
                         <div class="mb-3">

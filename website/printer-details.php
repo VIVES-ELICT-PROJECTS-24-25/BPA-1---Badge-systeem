@@ -31,9 +31,8 @@ try {
     
     // Haal actieve reserveringen op voor deze printer
     $stmt = $conn->prepare("
-        SELECT r.*, u.Voornaam, u.Naam
+        SELECT r.PRINT_START, r.PRINT_END
         FROM Reservatie r
-        JOIN User u ON r.User_ID = u.User_ID
         WHERE r.Printer_ID = ? 
           AND r.PRINT_END > NOW()
         ORDER BY r.PRINT_START
@@ -181,8 +180,6 @@ include 'includes/header.php';
                                     <tr>
                                         <th>Datum</th>
                                         <th>Tijd</th>
-                                        <th>Gebruiker</th>
-                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -192,16 +189,6 @@ include 'includes/header.php';
                                             <td>
                                                 <?php echo date('H:i', strtotime($reservation['PRINT_START'])); ?> - 
                                                 <?php echo date('H:i', strtotime($reservation['PRINT_END'])); ?>
-                                            </td>
-                                            <td><?php echo htmlspecialchars($reservation['Voornaam'] . ' ' . $reservation['Naam']); ?></td>
-                                            <td>
-                                                <span class="badge bg-<?php 
-                                                    if ($reservation['Status'] === 'wachtend') echo 'warning';
-                                                    elseif ($reservation['Status'] === 'actief') echo 'success';
-                                                    else echo 'primary';
-                                                ?>">
-                                                    <?php echo ucfirst($reservation['Status']); ?>
-                                                </span>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

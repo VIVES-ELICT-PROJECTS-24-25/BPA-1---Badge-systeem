@@ -9,6 +9,17 @@ $currentPage = 'admin-reservations';
 $success = '';
 $error = '';
 
+// Check of we een kolom 'feedback_mail_verzonden' moeten toevoegen aan de Reservatie tabel
+try {
+    $checkColumnStmt = $conn->query("SHOW COLUMNS FROM Reservatie LIKE 'feedback_mail_verzonden'");
+    if ($checkColumnStmt->rowCount() == 0) {
+        // Kolom bestaat niet, voeg toe
+        $conn->exec("ALTER TABLE Reservatie ADD COLUMN feedback_mail_verzonden TINYINT(1) DEFAULT 0");
+    }
+} catch (PDOException $e) {
+    $error = 'Fout bij controleren/aanmaken van database kolom: ' . $e->getMessage();
+}
+
 // Reservering verwijderen
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $id = (int)$_GET['delete'];
@@ -137,6 +148,14 @@ try {
 } catch (PDOException $e) {
     $users = [];
 }
+
+// Tel het aantal reserveringen die nog geen feedback mail hebben ontvangen
+try {
+    $stmtCount = $conn->query("SELECT COUNT(*) as count FROM Reservatie WHERE (feedback_mail_verzonden = 0 OR feedback_mail_verzonden IS NULL) AND PRINT_END < NOW()");
+    $pendingMailsCount = $stmtCount->fetch(PDO::FETCH_ASSOC)['count'];
+} catch (PDOException $e) {
+    $pendingMailsCount = 0;
+}
 ?>
 
 <!DOCTYPE html>
@@ -203,6 +222,18 @@ try {
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="opleidingen.php">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                Opleidingen
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="feedback.php">
+                                <i class="fas fa-comments me-2"></i>
+                                Feedback
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="../index.php">
                                 <i class="fas fa-home me-2"></i>
                                 Terug naar site
@@ -222,6 +253,18 @@ try {
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">Reserveringen Beheer</h1>
+                    
+                    <!-- Nieuwe knop voor bulk feedback mails -->
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="send_all_feedback_emails.php" 
+                           class="btn btn-success me-2" 
+                           onclick="return confirm('Wilt u feedback mails versturen naar alle gebruikers die er nog geen hebben ontvangen?')">
+                            <i class="fas fa-envelope me-1"></i> Alle feedback mails versturen
+                            <?php if ($pendingMailsCount > 0): ?>
+                                <span class="badge bg-light text-dark ms-1"><?php echo $pendingMailsCount; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </div>
                 </div>
                 
                 <?php if ($success): ?>
@@ -333,6 +376,7 @@ try {
                                             <th>Beheerder print</th>
                                             <th>Filament</th>
                                             <th>Pincode</th>
+                                            <th>Mail status</th>
                                             <th>Acties</th>
                                         </tr>
                                     </thead>
@@ -408,7 +452,18 @@ try {
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    <code><?php echo htmlspecialchars($reservering['Pincode']); ?></code>
+                                                    <code><?php echo htmlspecialchars($reservering['Pincode'] ?? 'N/A'); ?></code>
+                                                </td>
+                                                <td>
+                                                    <?php if (isset($reservering['feedback_mail_verzonden']) && $reservering['feedback_mail_verzonden'] == 1): ?>
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check me-1"></i> Verzonden
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge bg-secondary">
+                                                            <i class="fas fa-times me-1"></i> Niet verzonden
+                                                        </span>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td>
                                                     <a href="reservation-detail.php?id=<?php echo $reservering['Reservatie_ID']; ?>" class="btn btn-sm btn-primary" title="Bekijken">
@@ -419,6 +474,13 @@ try {
                                                        onclick="return confirm('Weet je zeker dat je deze reservering wilt verwijderen?')"
                                                        title="Verwijderen">
                                                         <i class="fas fa-trash"></i>
+                                                    </a>
+                                                    <!-- Feedback Mail knop -->
+                                                    <a href="send_feedback_email.php?id=<?php echo $reservering['Reservatie_ID']; ?>" 
+                                                       class="btn btn-sm btn-success" 
+                                                       onclick="return confirm('Wilt u een feedback mail versturen naar de gebruiker?')"
+                                                       title="Feedback mail versturen">
+                                                        <i class="fas fa-envelope"></i>
                                                     </a>
                                                 </td>
                                             </tr>
@@ -470,6 +532,14 @@ try {
                                         <i class="fas fa-print"></i> Ja
                                     </span>
                                     <span>Beheerder moet printen</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-success me-2">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <span>Feedback mail versturen</span>
                                 </div>
                             </div>
                         </div>
