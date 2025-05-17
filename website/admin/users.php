@@ -21,11 +21,24 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
             // Begin transactie
             $conn->beginTransaction();
             
-            // Eerst alle reserveringen van deze gebruiker verwijderen/afhandelen
+            // Eerst alle reserveringen van deze gebruiker verwijderen
             $stmt = $conn->prepare("DELETE FROM Reservatie WHERE User_ID = ?");
             $stmt->execute([$userId]);
             
-            // Daarna de gebruiker verwijderen
+            // Verwijder alle VIVES gegevens van deze gebruiker
+            $stmt = $conn->prepare("DELETE FROM Vives WHERE User_ID = ?");
+            $stmt->execute([$userId]);
+            
+            // Controleer of er andere gerelateerde tabellen zijn en verwijder deze ook
+            // Als er een Onderzoeker_Goedkeuring tabel bestaat, verwijder die records ook
+            try {
+                $stmt = $conn->prepare("DELETE FROM Onderzoeker_Goedkeuring WHERE User_ID = ?");
+                $stmt->execute([$userId]);
+            } catch (PDOException $e) {
+                // Negeer als deze tabel niet bestaat
+            }
+            
+            // Als laatste de gebruiker zelf verwijderen
             $stmt = $conn->prepare("DELETE FROM User WHERE User_ID = ?");
             $stmt->execute([$userId]);
             

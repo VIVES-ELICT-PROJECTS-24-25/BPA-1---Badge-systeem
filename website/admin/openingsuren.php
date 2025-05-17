@@ -20,11 +20,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $lokaalBericht = '<div class="alert alert-danger">Locatie mag niet leeg zijn.</div>';
         } else {
             try {
-                $stmt = $conn->prepare("INSERT INTO Lokalen (Locatie) VALUES (?)");
-                $stmt->execute([$locatie]);
+                // Genereer handmatig een nieuw ID
+                $stmtMaxId = $conn->query("SELECT MAX(id) as maxId FROM Lokalen");
+                $result = $stmtMaxId->fetch();
+                $newId = ($result['maxId'] ?? 0) + 1;
+                
+                // Voeg lokaal toe met expliciet ID
+                $stmt = $conn->prepare("INSERT INTO Lokalen (id, Locatie) VALUES (?, ?)");
+                $stmt->execute([$newId, $locatie]);
                 $lokaalBericht = '<div class="alert alert-success">Lokaal succesvol toegevoegd!</div>';
             } catch (PDOException $e) {
                 $lokaalBericht = '<div class="alert alert-danger">Fout bij het toevoegen van lokaal: ' . $e->getMessage() . '</div>';
+            }
+        }
+    }
+    
+    // Bewerken van een lokaal
+    if (isset($_POST['action']) && $_POST['action'] === 'edit_lokaal') {
+        $id = $_POST['id'];
+        $locatie = trim($_POST['locatie']);
+        
+        if (empty($locatie)) {
+            $lokaalBericht = '<div class="alert alert-danger">Locatie mag niet leeg zijn.</div>';
+        } else {
+            try {
+                $stmt = $conn->prepare("UPDATE Lokalen SET Locatie = ? WHERE id = ?");
+                $stmt->execute([$locatie, $id]);
+                $lokaalBericht = '<div class="alert alert-success">Lokaal succesvol bijgewerkt!</div>';
+            } catch (PDOException $e) {
+                $lokaalBericht = '<div class="alert alert-danger">Fout bij het bijwerken van lokaal: ' . $e->getMessage() . '</div>';
             }
         }
     }
@@ -44,11 +68,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $bericht = '<div class="alert alert-danger">Eindtijd moet na starttijd liggen.</div>';
         } else {
             try {
-                $stmt = $conn->prepare("INSERT INTO Openingsuren (Lokaal_id, Tijdstip_start, Tijdstip_einde) VALUES (?, ?, ?)");
-                $stmt->execute([$lokaal_id, $tijdstip_start, $tijdstip_einde]);
+                // Genereer handmatig een nieuw ID voor openingsuren
+                $stmtMaxId = $conn->query("SELECT MAX(id) as maxId FROM Openingsuren");
+                $result = $stmtMaxId->fetch();
+                $newId = ($result['maxId'] ?? 0) + 1;
+                
+                $stmt = $conn->prepare("INSERT INTO Openingsuren (id, Lokaal_id, Tijdstip_start, Tijdstip_einde) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$newId, $lokaal_id, $tijdstip_start, $tijdstip_einde]);
                 $bericht = '<div class="alert alert-success">Openingsuren succesvol toegevoegd!</div>';
             } catch (PDOException $e) {
                 $bericht = '<div class="alert alert-danger">Fout bij het toevoegen van openingsuren: ' . $e->getMessage() . '</div>';
+            }
+        }
+    }
+    
+    // Bewerken van openingsuren
+    if (isset($_POST['action']) && $_POST['action'] === 'edit_openingsuren') {
+        $id = $_POST['id'];
+        $lokaal_id = $_POST['lokaal_id'];
+        $start_date = $_POST['start_date'];
+        $start_time = $_POST['start_time'];
+        $eind_date = $_POST['eind_date'];
+        $eind_time = $_POST['eind_time'];
+        
+        $tijdstip_start = $start_date . ' ' . $start_time . ':00';
+        $tijdstip_einde = $eind_date . ' ' . $eind_time . ':00';
+        
+        if (strtotime($tijdstip_start) >= strtotime($tijdstip_einde)) {
+            $bericht = '<div class="alert alert-danger">Eindtijd moet na starttijd liggen.</div>';
+        } else {
+            try {
+                $stmt = $conn->prepare("UPDATE Openingsuren SET Lokaal_id = ?, Tijdstip_start = ?, Tijdstip_einde = ? WHERE id = ?");
+                $stmt->execute([$lokaal_id, $tijdstip_start, $tijdstip_einde, $id]);
+                $bericht = '<div class="alert alert-success">Openingsuren succesvol bijgewerkt!</div>';
+            } catch (PDOException $e) {
+                $bericht = '<div class="alert alert-danger">Fout bij het bijwerken van openingsuren: ' . $e->getMessage() . '</div>';
             }
         }
     }
