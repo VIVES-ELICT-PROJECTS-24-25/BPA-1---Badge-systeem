@@ -355,14 +355,16 @@ try {
                                                 </td>
                                                 <td><?php echo htmlspecialchars($user['Emailadres']); ?></td>
                                                 <td>
-                                                    <?php if ($user['Type'] == 'beheerder'): ?>
-                                                        <span class="badge bg-danger">Beheerder</span>
-                                                    <?php elseif ($user['Type'] == 'onderzoeker'): ?>
-                                                        <span class="badge bg-warning text-dark">Onderzoeker</span>
-                                                    <?php else: ?>
-                                                        <span class="badge bg-secondary">Student</span>
-                                                    <?php endif; ?>
-                                                </td>
+    <?php if ($user['Type'] == 'beheerder'): ?>
+        <span class="badge bg-danger">Beheerder</span>
+    <?php elseif ($user['Type'] == 'onderzoeker'): ?>
+        <span class="badge bg-warning text-dark">Onderzoeker</span>
+    <?php elseif ($user['Type'] == 'docent'): ?>
+        <span class="badge bg-info">Docent</span>
+    <?php else: ?>
+        <span class="badge bg-secondary">Student</span>
+    <?php endif; ?>
+</td>
                                                 <td><?php echo date('d-m-Y', strtotime($user['AanmaakAccount'])); ?></td>
                                                 <td>
                                                     <?php 

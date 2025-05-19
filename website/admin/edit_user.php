@@ -117,55 +117,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
                 
                 // Update VIVES gegevens indien van toepassing
-                if ($type == 'student' || $type == 'docent' || $type == 'onderzoeker') {
-                    // Bepaal VIVES type op basis van gebruikerstype als het niet is ingevuld
-                    if (empty($vives_type)) {
-                        if ($type == 'student') $vives_type = 'student';
-                        elseif ($type == 'docent') $vives_type = 'medewerker';
-                        elseif ($type == 'onderzoeker') $vives_type = 'onderzoeker';
-                    }
-                    
-                    // Controleer of de VIVES record al bestaat
-                    $stmt = $conn->prepare("SELECT User_ID FROM Vives WHERE User_ID = ?");
-                    $stmt->execute([$userId]);
-                    
-                    if ($stmt->rowCount() > 0) {
-                        // Update bestaande record - ZONDER Naam kolom
-                        $stmt = $conn->prepare("
-                            UPDATE Vives SET 
-                            Voornaam = ?, 
-                            Vives_id = ?, 
-                            rfidkaartnr = ?,
-                            opleiding_id = ?, 
-                            Type = ?
-                            WHERE User_ID = ?
-                        ");
-                        
-                        $stmt->execute([
-                            $voornaam,
-                            $vives_id,
-                            $rfidkaartnr,
-                            $opleiding_id,
-                            $vives_type,
-                            $userId
-                        ]);
-                    } else {
-                        // Maak nieuwe record aan - ZONDER Naam kolom
-                        $stmt = $conn->prepare("
-                            INSERT INTO Vives (User_ID, Voornaam, Vives_id, rfidkaartnr, opleiding_id, Type)
-                            VALUES (?, ?, ?, ?, ?, ?)
-                        ");
-                        
-                        $stmt->execute([
-                            $userId,
-                            $voornaam,
-                            $vives_id,
-                            $rfidkaartnr,
-                            $opleiding_id,
-                            $vives_type
-                        ]);
-                    }
-                }
+if ($type == 'student' || $type == 'docent' || $type == 'onderzoeker') {
+    // Bepaal VIVES type op basis van gebruikerstype als het niet is ingevuld
+    if (empty($vives_type)) {
+        if ($type == 'student') $vives_type = 'student';
+        elseif ($type == 'docent') $vives_type = 'medewerker';
+        elseif ($type == 'onderzoeker') $vives_type = 'onderzoeker';
+    }
+    
+    // Als dit geen student is, zorg ervoor dat opleiding_id NULL is
+    if ($type != 'student') {
+        $opleiding_id = null;
+    } elseif (empty($opleiding_id)) {
+        // Voor studenten, als opleiding leeg is, zet het op NULL
+        $opleiding_id = null;
+    }
+    
+    // Controleer of de VIVES record al bestaat
+    $stmt = $conn->prepare("SELECT User_ID FROM Vives WHERE User_ID = ?");
+    $stmt->execute([$userId]);
+    
+    if ($stmt->rowCount() > 0) {
+        // Update bestaande record - ZONDER Naam kolom
+        $stmt = $conn->prepare("
+            UPDATE Vives SET 
+            Voornaam = ?, 
+            Vives_id = ?, 
+            rfidkaartnr = ?,
+            opleiding_id = ?, 
+            Type = ?
+            WHERE User_ID = ?
+        ");
+        
+        $stmt->execute([
+            $voornaam,
+            $vives_id,
+            $rfidkaartnr,
+            $opleiding_id,
+            $vives_type,
+            $userId
+        ]);
+    } else {
+        // Maak nieuwe record aan - ZONDER Naam kolom
+        $stmt = $conn->prepare("
+            INSERT INTO Vives (User_ID, Voornaam, Vives_id, rfidkaartnr, opleiding_id, Type)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        
+        $stmt->execute([
+            $userId,
+            $voornaam,
+            $vives_id,
+            $rfidkaartnr,
+            $opleiding_id,
+            $vives_type
+        ]);
+    }
+}
                 
                 // Wachtwoord bijwerken als er een nieuw is opgegeven
                 if (!empty($_POST['new_password'])) {

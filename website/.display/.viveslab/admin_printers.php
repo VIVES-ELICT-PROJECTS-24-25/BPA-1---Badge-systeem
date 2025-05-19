@@ -259,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_SERVER['HTTP_X_REQUESTED_W
     if (isset($_POST['all_on'])) {
         // Set all printers to 'aan' in Firebase, maar niet in de database
         try {
-            // Als Firebase geïnitialiseerd is, stuur commando naar Firebase
+            // Als Firebase geï¿½nitialiseerd is, stuur commando naar Firebase
             if ($firebaseInitialized) {
                 $timestamp = date("Y-m-d H:i:s");
                 $shellyIds = [];
@@ -291,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_SERVER['HTTP_X_REQUESTED_W
             $printer_id = $_POST['printer_id'];
             $status = $_POST['status'];
             
-            // Als Firebase geïnitialiseerd is, stuur ook commando naar Firebase
+            // Als Firebase geï¿½nitialiseerd is, stuur ook commando naar Firebase
             if ($firebaseInitialized) {
                 // Zoek de juiste printer index
                 $printerIndex = -1;
@@ -375,19 +375,50 @@ ob_end_clean();
     <link rel="stylesheet" href="assets/css/hide-cursor.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Ensure the page can scroll when content overflows */
+        /* Ensure the page can scroll when content overflows while keeping footer at bottom */
         body, html {
             height: 100%;
-            overflow-y: auto;
+            margin: 0;
+            padding: 0;
         }
         
         .container {
-            min-height: 100%;
-            overflow-y: auto;
+            min-height: 100vh; /* Full viewport height */
+            display: flex;
+            flex-direction: column;
         }
         
         main {
-            overflow-y: auto;
+            flex: 1; /* Take remaining space */
+            overflow-y: auto; /* Make only the main content scrollable */
+            padding-bottom: 80px; /* Space for footer */
+            position: relative;
+        }
+        
+        /* Make the action buttons stick to the bottom */
+        .action-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #eee;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            z-index: 100; /* Ensure it stays on top */
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1); /* Add shadow for better separation */
+        }
+        
+        /* Adjust printer grid for better scrolling */
+        .printer-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 20px; /* Extra space at the bottom */
         }
     </style>
     <!-- JavaScript for clock functionality -->
@@ -439,7 +470,7 @@ ob_end_clean();
             
             <?php if (!$firebaseInitialized): ?>
             <div class="alert alert-warning">
-                <strong>Let op:</strong> Firebase-verbinding is niet geïnitialiseerd. Shelly-apparaten kunnen niet worden aangestuurd.
+                <strong>Let op:</strong> Firebase-verbinding is niet geï¿½nitialiseerd. Shelly-apparaten kunnen niet worden aangestuurd.
                 <?php if ($initError): ?>
                 <br><small><?php echo htmlspecialchars($initError); ?></small>
                 <?php endif; ?>
@@ -887,7 +918,7 @@ ob_end_clean();
         `;
         document.head.appendChild(style);
         
-        // Initiële update van printer status
+        // Initiï¿½le update van printer status
         updatePrinterStatus();
         
         // Update printer status elke 10 seconden
